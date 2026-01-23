@@ -1,0 +1,7 @@
+{
+  "name": "WasteFoodLink",
+  "description": "A comprehensive food waste reduction platform connecting donors, NGOs, and administrators to streamline food surplus redistribution and track social impact (SDG-12).",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
