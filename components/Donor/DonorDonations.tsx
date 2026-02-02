@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
-import { MOCK_DONATIONS } from '../constants';
-import { Button, Card, StatusBadge, Input } from './UI';
-import { DonationStatus } from '../types';
+import { MOCK_DONATIONS } from '../../constants';
+import { Button, Card, StatusBadge, Input } from '../UI';
+import { DonationStatus } from '../../types';
 
 interface DonorDonationsProps {
   onAddClick: () => void;

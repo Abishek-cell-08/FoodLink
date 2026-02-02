@@ -5,15 +5,15 @@ import Navbar from './components/Navbar';
 import DashboardLayout from './components/DashboardLayout';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
-import AdminOverview from './components/AdminOverview';
-import AdminReports from './components/AdminReports';
-import AdminNGOManagement from './components/AdminNGOManagement';
-import DonorOverview from './components/DonorOverview';
-import DonorDonations from './components/DonorDonations';
-import NGOOverview from './components/NGOOverview';
-import NGOBrowse from './components/NGOBrowse';
-import NGORequests from './components/NGORequests';
-import AddFoodForm from './components/AddFoodForm';
+import AdminOverview from './components/Admin/AdminOverview';
+import AdminReports from './components/Admin/AdminReports';
+import AdminNGOManagement from './components/Admin/AdminNGOManagement';
+import DonorOverview from './components/Donor/DonorOverview';
+import DonorDonations from './components/Donor/DonorDonations';
+import NGOOverview from './components/NGO/NGOOverview';
+import NGOBrowse from './components/NGO/NGOBrowse';
+import NGORequests from './components/NGO/NGORequests';
+import AddFoodForm from './components/Donor/AddFoodForm';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);

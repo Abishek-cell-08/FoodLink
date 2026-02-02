@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
-import { User, DonationStatus } from '../types';
-import { MOCK_DONATIONS } from '../constants';
-import { Button, Card } from './UI';
+import { User, DonationStatus } from '../../types';
+import { MOCK_DONATIONS } from '../../constants';
+import { Button, Card } from '../UI';
 
 interface NGOOverviewProps {
   user: User;

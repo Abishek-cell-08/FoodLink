@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Button, Card, StatusBadge, Input } from './UI';
+import { Button, Card, StatusBadge, Input } from '../UI';
 
 const AdminNGOManagement: React.FC = () => {
   const [selectedNGO, setSelectedNGO] = useState<any>(null);

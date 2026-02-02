@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { DonationStatus } from '../types';
-import { MOCK_DONATIONS } from '../constants';
-import { Button, Card, StatusBadge } from './UI';
+import { DonationStatus } from '../../types';
+import { MOCK_DONATIONS } from '../../constants';
+// Update the import path below to the correct location of your UI components.
+// For example, if they are in '../../components/UI', use that path:
+import { Button, Card, StatusBadge } from '../../components/UI';
 
 interface NGORequestsProps {
   onScan: () => void;

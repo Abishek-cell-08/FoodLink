@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { MOCK_DONATIONS } from '../constants';
-import { Button, Card, StatusBadge } from './UI';
+import { MOCK_DONATIONS } from '../../constants';
+import { Button, Card, StatusBadge } from '../../components/UI';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { DonationStatus } from '../types';
+import { DonationStatus } from '../../types';
 
 interface DonorOverviewProps {
   onViewAll: () => void;

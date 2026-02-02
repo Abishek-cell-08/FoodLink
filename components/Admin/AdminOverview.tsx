@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button, Card } from './UI';
+import { Button, Card } from '../UI';
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from 'recharts';
 
 interface AdminOverviewProps {

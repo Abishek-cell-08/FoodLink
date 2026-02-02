@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { MOCK_DONATIONS } from '../constants';
-import { Button, Card, StatusBadge } from './UI';
+import { MOCK_DONATIONS } from '../../constants';
+import { Button, Card, StatusBadge } from '../../components/UI';
 
 interface DonorDashboardProps {
   onAddClick: () => void;

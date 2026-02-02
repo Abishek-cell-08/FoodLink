@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button, Input, Card } from './UI';
+import { Button, Input, Card } from '../UI';
 
 interface AddFoodFormProps {
   onCancel: () => void;

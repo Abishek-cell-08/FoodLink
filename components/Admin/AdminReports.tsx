@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button, Card } from './UI';
+import { Button, Card } from '../UI';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from 'recharts';
 
 const AdminReports: React.FC = () => {
