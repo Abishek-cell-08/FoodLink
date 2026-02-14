@@ -14,6 +14,8 @@ import NGOOverview from './components/NGO/NGOOverview';
 import NGOBrowse from './components/NGO/NGOBrowse';
 import NGORequests from './components/NGO/NGORequests';
 import AddFoodForm from './components/Donor/AddFoodForm';
+import api from "./api/client";
+
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);

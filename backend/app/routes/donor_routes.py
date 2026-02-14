@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.role_guard import role_required
 from sqlalchemy import func
 
 from app import db
@@ -8,10 +9,14 @@ from app.utils.response_helper import success_response
 
 donor_bp = Blueprint("donor", __name__, url_prefix="/api/donor")
 
+# =====================
+# Create Donation
+# =====================
 @donor_bp.route("/donations", methods=["POST"])
 @jwt_required()
+@role_required("DONOR")
 def create_donation():
-    donor_id = get_jwt_identity()
+    donor_id = int(get_jwt_identity())  # JWT identity is string → convert to int
     data = request.json
 
     donation = Donation(
@@ -28,10 +33,14 @@ def create_donation():
 
     return success_response("Donation created successfully", donation.to_dict())
 
+# =====================
+# Donor Overview
+# =====================
 @donor_bp.route("/overview", methods=["GET"])
 @jwt_required()
+@role_required("DONOR")
 def donor_overview():
-    donor_id = get_jwt_identity()
+    donor_id = int(get_jwt_identity())
 
     total_donations = db.session.query(func.count(Donation.id)) \
         .filter(Donation.donor_id == donor_id).scalar()
@@ -55,10 +64,14 @@ def donor_overview():
         "recentActivity": [d.to_dict() for d in recent]
     })
 
+# =====================
+# Donor Dashboard
+# =====================
 @donor_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
+@role_required("DONOR")
 def donor_dashboard():
-    donor_id = get_jwt_identity()
+    donor_id = int(get_jwt_identity())
 
     recent = Donation.query \
         .filter_by(donor_id=donor_id) \
@@ -74,10 +87,14 @@ def donor_dashboard():
         "recentDonations": [d.to_dict() for d in recent]
     })
 
+# =====================
+# List Donations (with search & filter)
+# =====================
 @donor_bp.route("/donations", methods=["GET"])
 @jwt_required()
+@role_required("DONOR")
 def list_donations():
-    donor_id = get_jwt_identity()
+    donor_id = int(get_jwt_identity())
 
     search = request.args.get("search", "")
     status = request.args.get("status", "ALL")
