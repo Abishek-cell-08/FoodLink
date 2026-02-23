@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import api from "../../api/client";
 import { Button, Card, StatusBadge, Input } from "../UI";
 import { DonationStatus } from "../../types";
+import DonorDonationDetails from "./DonorDonationDetails";
+import DonorDonationQR from "./DonorDonationQR";
 
 interface Donation {
   id: number;
   foodType: string;
   quantity: string;
-  expiryWindow: string;
-  distanceKm?: number;
   status: DonationStatus;
-  createdAt: string;
+  createdAt: string;   // UTC ISO from backend
+  expiresAt: string;   // UTC ISO from backend
+  distanceKm?: number;
 }
 
 interface DonorDonationsProps {
@@ -26,8 +28,52 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [showDetailsId, setShowDetailsId] = useState<number | null>(null);
+  const [showQrId, setShowQrId] = useState<number | null>(null);
+
   const perPage = 10;
 
+  // -------- Time Helpers --------
+  const parseUTC = (iso: string) => new Date(iso + "Z"); // force UTC parse
+
+  const formatTimeLeft = (expiresAt: string) => {
+    if (!expiresAt) {
+      return { text: "-", isCritical: false, isExpired: false };
+    }
+
+    const nowMs = Date.now();
+    const expMs = parseUTC(expiresAt).getTime();
+    const diffMs = expMs - nowMs;
+
+    if (diffMs <= 0) {
+      return { text: "Expired", isCritical: false, isExpired: true };
+    }
+
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    const text =
+      hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`;
+
+    const isCritical = totalMinutes <= 60; // less than 1 hour
+
+    return { text, isCritical, isExpired: false };
+  };
+
+  const formatPostedTime = (createdAt: string) => {
+    if (!createdAt) return "-";
+    const d = parseUTC(createdAt);
+    return d.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // -------- API --------
   const fetchDonations = async () => {
     setLoading(true);
     try {
@@ -100,7 +146,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
         </div>
       </Card>
 
-      {/* Full Table */}
+      {/* Table */}
       <Card className="overflow-hidden border-slate-200">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -122,46 +168,80 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
                   </td>
                 </tr>
               ) : items.length > 0 ? (
-                items.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-900">
-                      {d.foodType}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{d.quantity}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-slate-900 font-medium">
-                          {d.expiryWindow}
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          Listed: {new Date(d.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500">
-                      {d.distanceKm ?? "-"} km
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={d.status} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="h-8">
-                          Details
-                        </Button>
-                        {d.status !== DonationStatus.PICKED_UP && (
+                items.map((d) => {
+                  const { text, breakup } = (() => {
+                    const r = formatTimeLeft(d.expiresAt);
+                    return { text: r.text, breakup: r };
+                  })();
+
+                  const { isCritical, isExpired } = formatTimeLeft(d.expiresAt);
+
+                  const onViewQR = (id: number) => {
+                    setShowQrId(id);
+                  };
+
+                  return (
+                    <tr key={d.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-slate-900">
+                        {d.foodType}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {d.quantity}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span
+                            className={`font-medium ${
+                              isExpired
+                                ? "text-red-600"
+                                : isCritical
+                                ? "text-amber-600"
+                                : "text-slate-900"
+                            }`}
+                          >
+                            {text}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Listed: {formatPostedTime(d.createdAt)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-500">
+                        {d.distanceKm != null ? `${d.distanceKm} km` : "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={d.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 border-emerald-200 text-emerald-600"
+                            className="h-8"
+                            onClick={() => setShowDetailsId(d.id)}
                           >
-                            View QR
+                            Details
                           </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                         {d.status === DonationStatus.ALLOCATED ? (
+  <Button
+    variant="outline"
+    size="sm"
+    className="h-8 border-emerald-200 text-emerald-600"
+    onClick={() => onViewQR(d.id)}
+  >
+    View QR
+  </Button>
+) : (
+  <span className="text-xs text-slate-400 font-medium">
+    Waiting for NGO
+  </span>
+)}
+
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">
@@ -174,6 +254,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
         </div>
       </Card>
 
+      {/* Pagination */}
       <div className="flex justify-between items-center px-2">
         <div className="text-xs text-slate-500 font-medium">
           Showing {items.length} of {total} entries
@@ -197,6 +278,26 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
           </Button>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsId && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <DonorDonationDetails
+            donationId={showDetailsId}
+            onClose={() => setShowDetailsId(null)}
+          />
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {showQrId && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <DonorDonationQR
+            donationId={showQrId}
+            onClose={() => setShowQrId(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };

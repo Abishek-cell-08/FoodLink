@@ -88,3 +88,26 @@ def me():
         return {"message": "User not found"}, 404
 
     return success_response("User profile", user.to_dict())
+
+# =====================
+# Update My Location
+# =====================
+@auth_bp.route("/me/location", methods=["POST"])
+@jwt_required()
+def update_location():
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+
+    data = request.get_json()
+    lat = data.get("lat")
+    lng = data.get("lng")
+
+    if lat is None or lng is None:
+        return {"message": "lat and lng are required"}, 400
+
+    user.lat = float(lat)
+    user.lng = float(lng)
+
+    db.session.commit()
+
+    return success_response("Location updated", user.to_dict())

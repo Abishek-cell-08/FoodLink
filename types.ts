@@ -23,19 +23,13 @@ export interface User {
 }
 
 export interface FoodDonation {
-  id: string;
-  donorId: string;
-  donorName: string;
+  id: number;
   foodType: string;
-  quantity: string; // e.g., "5 kg"
-  expiryWindow: string; // e.g., "4 hours"
-  expiryHours: number; // Numeric for sorting
-  location: string;
-  distanceKm: number; // Distance from current NGO
+  quantity: string;
+  expiryWindow: string;   // e.g. "3 hrs"
   status: DonationStatus;
-  allocatedTo?: string; // NGO ID
-  createdAt: string;
-  qrCodeData: string;
+  createdAt: string;      // ISO string from backend
+  distanceKm?: number | null; // computed later, may be null
 }
 
 export interface AnalyticsData {

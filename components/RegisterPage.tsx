@@ -1,78 +1,45 @@
 import React, { useState } from "react";
-import { User, UserRole } from "../types";
+import { UserRole } from "../types";
 import { Button, Input, Card } from "./UI";
 import api from "../api/client";
 
-interface LoginPageProps {
-  onLogin: (user: User) => void;
-  onRegisterClick: () => void; // ✅ add this
+interface RegisterPageProps {
+  onBackToLogin: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({ onBackToLogin }) => {
   const [role, setRole] = useState<UserRole>(UserRole.DONOR);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [location, setLocation] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // 🔹 Send browser location to backend
-  const sendMyLocation = async () => {
-    if (!navigator.geolocation) {
-      console.warn("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-
-        try {
-          await api.post("/api/auth/me/location", {
-            lat: latitude,
-            lng: longitude,
-          });
-          console.log("Location saved:", latitude, longitude);
-        } catch (e) {
-          console.error("Failed to save location", e);
-        }
-      },
-      (err) => {
-        console.warn("Geolocation denied or failed", err);
-      }
-    );
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      const res = await api.post("/api/auth/login", {
+      await api.post("/api/auth/register", {
+        name,
         email,
         password,
+        role,
+        location: location || undefined,
       });
 
-      const { token, user } = res.data.data;
-
-      // Check role matches selected tab
-      if (user.role !== role) {
-        setError(`You are registered as ${user.role}, not ${role}`);
-        setLoading(false);
-        return;
-      }
-
-      // Save token
-      localStorage.setItem("token", token);
-
-      // 🔹 Send location AFTER login (token is now set)
-      sendMyLocation();
-
-      // Pass real user to app
-      onLogin(user);
+      setSuccess("Registration successful! You can now login.");
+      setTimeout(() => {
+        onBackToLogin();
+      }, 1200);
     } catch (err: any) {
-      console.error(err);
-      setError("Invalid email or password");
+      console.error("Registration failed", err);
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -82,12 +49,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
     <div className="max-w-md mx-auto py-20 px-6">
       <Card className="p-8 space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Create Account</h2>
           <p className="text-slate-500 text-sm font-medium">
-            Please sign in to your dashboard
+            Join WasteFoodLink today
           </p>
         </div>
 
+        {/* Role Switch */}
         <div className="flex p-1 bg-slate-100 rounded-xl">
           {Object.values(UserRole).map((r) => (
             <button
@@ -105,7 +73,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
           ))}
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
+          <Input
+            label="Full Name"
+            placeholder="John Doe"
+            required
+            value={name}
+            onChange={(e: any) => setName(e.target.value)}
+          />
+
           <Input
             label="Email Address"
             type="email"
@@ -114,6 +90,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
             value={email}
             onChange={(e: any) => setEmail(e.target.value)}
           />
+
           <Input
             label="Password"
             type="password"
@@ -122,8 +99,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
             value={password}
             onChange={(e: any) => setPassword(e.target.value)}
           />
+
+          <Input
+            label="Location (optional)"
+            placeholder="City / Area"
+            value={location}
+            onChange={(e: any) => setLocation(e.target.value)}
+          />
+
           <Button fullWidth size="lg" disabled={loading}>
-            {loading ? "Signing in..." : `Sign In`}
+            {loading ? "Creating account..." : "Register"}
           </Button>
         </form>
 
@@ -133,14 +118,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
           </div>
         )}
 
+        {success && (
+          <div className="text-sm text-emerald-600 text-center font-medium">
+            {success}
+          </div>
+        )}
+
         <div className="text-center">
-          <span className="text-sm text-slate-500">Don't have an account? </span>
+          <span className="text-sm text-slate-500">Already have an account? </span>
           <button
             type="button"
             className="text-sm font-bold text-emerald-600 hover:underline"
-            onClick={onRegisterClick}
+            onClick={onBackToLogin}
           >
-            Register Now
+            Sign In
           </button>
         </div>
       </Card>
@@ -148,4 +139,4 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegisterClick }) => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

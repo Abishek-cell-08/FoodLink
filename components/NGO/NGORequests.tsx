@@ -8,10 +8,14 @@ interface NGORequestItem {
   id: number; // donation id
   foodType: string;
   quantity: string;
-  expiryWindow: string;
+  expiryWindow?: string;
   donorName?: string;
   location?: string;
   status: DonationStatus;
+
+  // ✅ New: coordinates from backend (Donation.to_dict)
+  pickupLat?: number;
+  pickupLng?: number;
 }
 
 interface NGORequestsProps {
@@ -50,6 +54,25 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
       console.error("Verification failed", err);
       alert(err.response?.data?.message || "Verification failed");
     }
+  };
+
+  // -------- Map Handler (OpenStreetMap - Free) --------
+  const openMap = (d: NGORequestItem) => {
+    let url = "";
+
+    if (d.pickupLat != null && d.pickupLng != null) {
+      // Use coordinates if available
+      url = `https://www.openstreetmap.org/?mlat=${d.pickupLat}&mlon=${d.pickupLng}#map=16/${d.pickupLat}/${d.pickupLng}`;
+    } else if (d.location) {
+      // Fallback: search by address string
+      const q = encodeURIComponent(d.location);
+      url = `https://www.openstreetmap.org/search?query=${q}`;
+    } else {
+      alert("Location not available for this donation");
+      return;
+    }
+
+    window.open(url, "_blank");
   };
 
   return (
@@ -123,24 +146,31 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                     Pickup Window
                   </div>
                   <div className="text-sm font-bold text-slate-900">
-                    {d.expiryWindow}
+                    {d.expiryWindow ?? "-"}
                   </div>
                 </div>
 
                 <div className="p-6 flex items-center justify-between lg:justify-end gap-6">
                   <StatusBadge status={d.status} />
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-9">
+                    {/* ✅ Wired Location Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      onClick={() => openMap(d)}
+                    >
                       Location
                     </Button>
+
                     {d.status === DonationStatus.ALLOCATED && (
                       <Button
                         variant="secondary"
                         size="sm"
                         className="h-9"
-                        onClick={() => handleVerify(d.requestId)}
+                        onClick={onScan}
                       >
-                        Verify Pickup
+                        Scan QR
                       </Button>
                     )}
                   </div>

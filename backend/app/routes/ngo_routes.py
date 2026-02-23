@@ -11,8 +11,10 @@ from app.models.pickup_model import Pickup
 from app.services.allocation_service import calculate_priority
 from app.services.qr_service import verify_qr
 from app.utils.response_helper import success_response
+from app.utils.distance import haversine_km  # ✅ distance helper
 
 ngo_bp = Blueprint("ngo", __name__, url_prefix="/api/ngo")
+
 
 # =====================
 # NGO Overview (Top 3 recommendations)
@@ -22,42 +24,59 @@ ngo_bp = Blueprint("ngo", __name__, url_prefix="/api/ngo")
 @role_required("NGO")
 def ngo_overview():
     ngo_id = int(get_jwt_identity())
-    ngo = User.query.get_or_404(ngo_id)  # ✅ use User, not NGO
+    ngo = User.query.get_or_404(ngo_id)
 
     donations = Donation.query.filter_by(status="PENDING").all()
     ranked = []
 
     for d in donations:
-        distance_km = 5  # placeholder
-        score = calculate_priority(d, ngo, distance_km)
-        ranked.append({**d.to_dict(), "priorityScore": score})
+        distance_km = haversine_km(
+            ngo.lat, ngo.lng,
+            d.pickup_lat, d.pickup_lng
+        )
+
+        score = calculate_priority(d, ngo, distance_km or 9999)
+
+        ranked.append({
+            **d.to_dict(),
+            "distanceKm": distance_km,
+            "priorityScore": score
+        })
 
     ranked.sort(key=lambda x: x["priorityScore"], reverse=True)
 
     return success_response("NGO overview", ranked[:3])
 
+
 # =====================
-# NGO Dashboard (All ranked)
+# NGO Dashboard (All ranked) (kept for API completeness)
 # =====================
 @ngo_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
 @role_required("NGO")
 def ngo_dashboard():
     ngo_id = int(get_jwt_identity())
-    ngo = User.query.get_or_404(ngo_id)  # ✅
+    ngo = User.query.get_or_404(ngo_id)
 
     donations = Donation.query.filter_by(status="PENDING").all()
-
     ranked = []
+
     for d in donations:
-        distance_km = 5
+        distance_km = haversine_km(
+            ngo.lat, ngo.lng,
+            d.pickup_lat, d.pickup_lng
+        )
+
         ranked.append({
             **d.to_dict(),
-            "priorityScore": calculate_priority(d, ngo, distance_km)
+            "distanceKm": distance_km,
+            "priorityScore": calculate_priority(d, ngo, distance_km or 9999)
         })
 
     ranked.sort(key=lambda x: x["priorityScore"], reverse=True)
+
     return success_response("NGO dashboard", ranked)
+
 
 # =====================
 # Browse Food
@@ -67,7 +86,7 @@ def ngo_dashboard():
 @role_required("NGO")
 def browse_food():
     ngo_id = int(get_jwt_identity())
-    ngo = User.query.get_or_404(ngo_id)  # ✅
+    ngo = User.query.get_or_404(ngo_id)
 
     search = request.args.get("search", "")
 
@@ -78,12 +97,19 @@ def browse_food():
 
     results = []
     for d in donations:
+        distance_km = haversine_km(
+            ngo.lat, ngo.lng,
+            d.pickup_lat, d.pickup_lng
+        )
+
         results.append({
             **d.to_dict(),
-            "priorityScore": calculate_priority(d, ngo, 5)
+            "distanceKm": distance_km,
+            "priorityScore": calculate_priority(d, ngo, distance_km or 9999)
         })
 
     return success_response("Food marketplace", results)
+
 
 # =====================
 # Claim Donation
@@ -107,7 +133,7 @@ def claim_donation(donation_id):
     )
 
     db.session.add(request_entry)
-    db.session.flush()  # ensure ID is created
+    db.session.flush()  # ensure request_entry.id exists
 
     pickup = Pickup(request_id=request_entry.id)
     db.session.add(pickup)
@@ -115,6 +141,7 @@ def claim_donation(donation_id):
     db.session.commit()
 
     return success_response("Donation claimed successfully")
+
 
 # =====================
 # Active Requests
@@ -138,6 +165,7 @@ def active_requests():
             })
 
     return success_response("Active requests", response)
+
 
 # =====================
 # Verify QR

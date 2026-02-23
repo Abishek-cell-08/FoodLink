@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Input, Card } from "../UI";
 import api from "../../api/client";
 
@@ -13,8 +13,36 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
   const [pickupAddress, setPickupAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  // ✅ NEW: Coordinates
+  const [pickupLat, setPickupLat] = useState<number | null>(null);
+  const [pickupLng, setPickupLng] = useState<number | null>(null);
+  const [locStatus, setLocStatus] = useState<string>("Detecting location...");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ✅ Auto-detect location on mount
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocStatus("Geolocation not supported");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setPickupLat(latitude);
+        setPickupLng(longitude);
+        setLocStatus("📍 Location detected");
+        console.log("Detected location:", latitude, longitude);
+      },
+      (err) => {
+        console.warn("Location error:", err);
+        setLocStatus("⚠️ Location not available (you can still submit)");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +57,8 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
         expiryHours: Number(expiryHours),
         pickupAddress,
         notes,
+        pickupLat, // ✅ send coords
+        pickupLng, // ✅ send coords
       });
 
       alert("Donation posted successfully!");
@@ -72,12 +102,22 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
             onChange={(e: any) => setExpiryHours(e.target.value)}
           />
           <Input
-            label="Pickup Location"
+            label="Pickup Location (Description)"
             placeholder="Kitchen Entrance B"
             required
             value={pickupAddress}
             onChange={(e: any) => setPickupAddress(e.target.value)}
           />
+        </div>
+
+        {/* ✅ Location status */}
+        <div className="text-sm text-slate-600">
+          {locStatus}
+          {pickupLat != null && pickupLng != null && (
+            <div className="text-xs text-slate-400">
+              Lat: {pickupLat.toFixed(5)}, Lng: {pickupLng.toFixed(5)}
+            </div>
+          )}
         </div>
 
         <div>

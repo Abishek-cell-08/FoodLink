@@ -2,6 +2,10 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.role_guard import role_required
 from sqlalchemy import func
+import qrcode
+import io
+import base64
+from app.models.request_model import Request
 
 from app import db
 from app.models.donation_model import Donation
@@ -20,13 +24,15 @@ def create_donation():
     data = request.json
 
     donation = Donation(
-        donor_id=donor_id,
-        food_type=data["foodType"],
-        quantity=data["quantity"],
-        expiry_hours=data["expiryHours"],
-        pickup_address=data["pickupAddress"],
-        notes=data.get("notes")
-    )
+    donor_id=donor_id,
+    food_type=data["foodType"],
+    quantity=data["quantity"],
+    expiry_hours=data["expiryHours"],
+    pickup_address=data["pickupAddress"],
+    pickup_lat=data.get("pickupLat"),
+    pickup_lng=data.get("pickupLng"),
+    notes=data.get("notes")
+)
 
     db.session.add(donation)
     db.session.commit()
@@ -116,4 +122,48 @@ def list_donations():
         "items": [d.to_dict() for d in pagination.items],
         "total": pagination.total,
         "page": page
+    })
+
+# =====================
+# Get Donation Details
+# =====================
+@donor_bp.route("/donations/<int:donation_id>", methods=["GET"])
+@jwt_required()
+@role_required("DONOR")
+def get_donation_details(donation_id):
+    donor_id = int(get_jwt_identity())
+
+    donation = Donation.query.filter_by(id=donation_id, donor_id=donor_id).first_or_404()
+
+    return success_response("Donation details", donation.to_dict())
+
+# =====================
+# Get QR Code for Donation
+# =====================
+@donor_bp.route("/donations/<int:donation_id>/qr", methods=["GET"])
+@jwt_required()
+@role_required("DONOR")
+def get_donation_qr(donation_id):
+    donor_id = int(get_jwt_identity())
+
+    donation = Donation.query.filter_by(id=donation_id, donor_id=donor_id).first_or_404()
+
+    # Find request (only exists if NGO has claimed it)
+    req = Request.query.filter_by(donation_id=donation.id).first()
+    if not req:
+        return {"message": "Donation not yet allocated to any NGO"}, 400
+
+    # QR payload = request_id
+    qr_data = f"REQUEST:{req.id}"
+
+    img = qrcode.make(qr_data)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    base64_img = base64.b64encode(buf.read()).decode("utf-8")
+
+    return success_response("QR generated", {
+        "requestId": req.id,
+        "qrBase64": base64_img
     })

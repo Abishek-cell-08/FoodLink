@@ -40,6 +40,18 @@ const NGODashboard: React.FC<NGODashboardProps> = ({ onScanClick }) => {
     fetchDashboard();
   }, []);
 
+  // ✅ NEW: Claim handler
+  const handleClaim = async (id: number) => {
+    try {
+      await api.post(`/api/ngo/claim/${id}`);
+      alert("Donation claimed successfully!");
+      fetchDashboard(); // refresh list
+    } catch (err: any) {
+      console.error("Failed to claim donation", err);
+      alert(err.response?.data?.message || "Failed to claim donation");
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
@@ -100,7 +112,11 @@ const NGODashboard: React.FC<NGODashboardProps> = ({ onScanClick }) => {
                   </span>
                 </div>
                 <div className="pt-2 flex gap-3">
-                  <Button fullWidth variant="secondary">
+                  <Button
+                    fullWidth
+                    variant="secondary"
+                    onClick={() => handleClaim(d.id)}
+                  >
                     Claim Now
                   </Button>
                 </div>

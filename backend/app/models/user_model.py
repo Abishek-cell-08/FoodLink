@@ -22,6 +22,10 @@ class User(db.Model):
     # Shared (optional)
     location = db.Column(db.String(200))
 
+    # ✅ NEW: Coordinates (for NGO & Donor if needed)
+    lat = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
+
     # NGO-specific (nullable for others)
     verified = db.Column(db.Boolean, default=False)
     performance_score = db.Column(db.Float)
@@ -48,6 +52,8 @@ class User(db.Model):
 
         if self.role in [UserRole.DONOR, UserRole.NGO]:
             base["location"] = self.location
+            base["lat"] = self.lat
+            base["lng"] = self.lng
 
         if self.role == UserRole.NGO:
             base["verified"] = self.verified

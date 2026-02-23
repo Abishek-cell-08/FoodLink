@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User, UserRole } from './types';
 import Navbar from './components/Navbar';
@@ -13,9 +12,10 @@ import DonorDonations from './components/Donor/DonorDonations';
 import NGOOverview from './components/NGO/NGOOverview';
 import NGOBrowse from './components/NGO/NGOBrowse';
 import NGORequests from './components/NGO/NGORequests';
+import NGOScanQR from './components/NGO/NGOScanQR';
 import AddFoodForm from './components/Donor/AddFoodForm';
 import api from "./api/client";
-
+import RegisterPage from "./components/RegisterPage";
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -33,8 +33,17 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (currentPage === 'landing' && !user) return <LandingPage onStart={() => setCurrentPage('login')} />;
-    if (currentPage === 'login' && !user) return <LoginPage onLogin={handleLogin} />;
-    
+    if (currentPage === 'login' && !user)
+  return (
+    <LoginPage
+      onLogin={handleLogin}
+      onRegisterClick={() => setCurrentPage("register")}
+    />
+  );
+
+if (currentPage === 'register' && !user)
+  return <RegisterPage onBackToLogin={() => setCurrentPage("login")} />;
+
     if (user) {
       return (
         <DashboardLayout user={user} activePage={currentPage} onNavigate={setCurrentPage}>
@@ -54,7 +63,7 @@ const App: React.FC = () => {
             ) : 
             <NGOOverview user={user} onBrowse={() => setCurrentPage('browse')} />
           )}
-          
+
           {/* Donor Routes */}
           {currentPage === 'my-donations' && user.role === UserRole.DONOR && (
             <DonorDonations onAddClick={() => setCurrentPage('add-donation')} />
@@ -62,15 +71,23 @@ const App: React.FC = () => {
           {currentPage === 'add-donation' && user.role === UserRole.DONOR && (
             <AddFoodForm onCancel={() => setCurrentPage('dashboard')} />
           )}
-          
+
           {/* NGO Routes */}
           {currentPage === 'browse' && user.role === UserRole.NGO && (
             <NGOBrowse user={user} onClaim={(id) => setCurrentPage('requests')} />
           )}
+
           {currentPage === 'requests' && user.role === UserRole.NGO && (
-            <NGORequests onScan={() => alert('Camera requested for scanning QR...')} />
+            <NGORequests onScan={() => setCurrentPage('scan-qr')} />
           )}
-          
+
+          {currentPage === 'scan-qr' && user.role === UserRole.NGO && (
+            <NGOScanQR
+              onSuccess={() => setCurrentPage('requests')}
+              onCancel={() => setCurrentPage('requests')}
+            />
+          )}
+
           {/* Admin Routes */}
           {currentPage === 'manage-ngos' && user.role === UserRole.ADMIN && (
             <AdminNGOManagement />
@@ -81,7 +98,7 @@ const App: React.FC = () => {
         </DashboardLayout>
       );
     }
-    
+
     return <LandingPage onStart={() => setCurrentPage('login')} />;
   };
 

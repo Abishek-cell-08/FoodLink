@@ -6,9 +6,11 @@ interface DonationItem {
   id: number;
   foodType: string;
   quantity: string;
-  expiryWindow: string;
+  createdAt: string;   // ISO
+  expiresAt: string;   // ISO
   distanceKm?: number;
   donorName?: string;
+  location?: string;
   priorityScore: number;
 }
 
@@ -26,15 +28,34 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // -------- Time Helpers (same as Donor / Browse) --------
+  const parseUTC = (iso: string) => new Date(iso + "Z");
+
+  const getRemainingMs = (expiresAt: string) => {
+    const nowMs = Date.now();
+    const expMs = parseUTC(expiresAt).getTime();
+    return expMs - nowMs;
+  };
+
+  const formatTimeLeft = (expiresAt: string) => {
+    if (!expiresAt) return "-";
+
+    const diffMs = getRemainingMs(expiresAt);
+    if (diffMs <= 0) return "Expired";
+
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`;
+  };
+
   const fetchOverview = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const res = await api.get<APIResponse<DonationItem[]>>("/api/ngo/overview");
-
-      console.log("Overview API response:", res.data);
-
       setRecommendations(res.data.data || []);
     } catch (err: any) {
       console.error("Failed to load NGO overview", err?.response || err);
@@ -59,7 +80,6 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
         </p>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm font-medium">
           {error}
@@ -87,41 +107,50 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {recommendations.map((d) => (
-                <Card
-                  key={d.id}
-                  className="p-5 flex items-center gap-6 border-slate-100 hover:border-emerald-200 transition-all"
-                >
-                  <div className="flex flex-col items-center justify-center bg-slate-50 rounded-lg p-3 min-w-[80px]">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">
-                      Priority
-                    </span>
-                    <span className="text-xl font-black text-emerald-600">
-                      {d.priorityScore}
-                    </span>
-                  </div>
+              {recommendations.map((d) => {
+                const remaining = formatTimeLeft(d.expiresAt);
 
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-900">{d.foodType}</h4>
-                    <p className="text-xs text-slate-500">
-                      {d.donorName ?? "Donor"} • {d.distanceKm ?? "-"} km away
-                    </p>
-                  </div>
-
-                  <div className="text-right mr-4">
-                    <div className="text-xs font-bold text-red-600">
-                      {d.expiryWindow}
+                return (
+                  <Card
+                    key={d.id}
+                    className="p-5 flex items-center gap-6 border-slate-100 hover:border-emerald-200 transition-all"
+                  >
+                    <div className="flex flex-col items-center justify-center bg-slate-50 rounded-lg p-3 min-w-[80px]">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        Priority
+                      </span>
+                      <span className="text-xl font-black text-emerald-600">
+                        {d.priorityScore}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-400">
-                      Time Remaining
-                    </div>
-                  </div>
 
-                  <Button variant="outline" size="sm" onClick={onBrowse}>
-                    View Details
-                  </Button>
-                </Card>
-              ))}
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900">{d.foodType}</h4>
+                      <p className="text-xs text-slate-500">
+                        {d.donorName ?? "Donor"} •{" "}
+                        {d.distanceKm != null ? `${d.distanceKm.toFixed(1)} km away` : "-"}
+                      </p>
+                    </div>
+
+                    <div className="text-right mr-4">
+                      <div
+                        className={`text-xs font-bold ${
+                          remaining === "Expired" ? "text-red-600" : "text-slate-900"
+                        }`}
+                      >
+                        {remaining}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        Time Remaining
+                      </div>
+                    </div>
+
+                    <Button variant="outline" size="sm" onClick={onBrowse}>
+                      View Details
+                    </Button>
+                  </Card>
+                );
+              })}
 
               {recommendations.length === 0 && (
                 <div className="py-20 text-center text-slate-400 font-medium">
@@ -132,7 +161,6 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
           )}
         </div>
 
-        {/* Right side info card */}
         <Card className="p-6 bg-slate-900 text-white border-none shadow-xl">
           <h3 className="font-bold mb-4">Priority Algorithm</h3>
           <p className="text-sm text-slate-400">

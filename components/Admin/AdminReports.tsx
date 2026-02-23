@@ -13,6 +13,8 @@ import {
   Legend,
 } from "recharts";
 import api from "../../api/client";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ReportRow {
   name: string;
@@ -40,7 +42,6 @@ const AdminReports: React.FC = () => {
       });
 
       const rows = res.data?.data;
-
       setData(Array.isArray(rows) ? rows : []);
     } catch (err) {
       console.error("Failed to load reports", err);
@@ -56,6 +57,67 @@ const AdminReports: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, sector, foodType]);
 
+  // ======================
+  // CSV Export
+  // ======================
+  const exportCSV = () => {
+    if (!data.length) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = ["Name", "Saved", "Wasted", "Predicted"];
+    const rows = data.map((r) => [r.name, r.saved, r.wasted, r.predicted]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((r) => r.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "wastefoodlink_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // ======================
+  // PDF Export
+  // ======================
+  const exportPDF = () => {
+    if (!data.length) {
+      alert("No data to export");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("WasteFoodLink - Impact Report", 14, 20);
+
+    doc.setFontSize(10);
+    doc.text(`Range: ${range} | Sector: ${sector} | Food Type: ${foodType}`, 14, 28);
+
+    const tableData = data.map((r) => [
+      r.name,
+      r.saved,
+      r.wasted,
+      r.predicted,
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [["Name", "Saved", "Wasted", "Predicted"]],
+      body: tableData,
+    });
+
+    doc.save("wastefoodlink_report.pdf");
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex justify-between items-end">
@@ -66,10 +128,12 @@ const AdminReports: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={exportCSV}>
             CSV Export
           </Button>
-          <Button size="sm">Download PDF Report</Button>
+          <Button size="sm" onClick={exportPDF}>
+            Download PDF Report
+          </Button>
         </div>
       </div>
 
