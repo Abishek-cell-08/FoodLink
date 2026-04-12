@@ -77,10 +77,10 @@ const AdminNGOManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Partner Governance</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Partner Governance</h2>
           <p className="text-slate-500 text-sm">
             Verify and audit NGO performance across the network
           </p>
@@ -97,15 +97,15 @@ const AdminNGOManagement: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* NGO List */}
         <Card className="lg:col-span-3 overflow-hidden border-slate-200">
-          <div className="p-4 border-b border-slate-100 flex gap-4">
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
             <Input
               placeholder="Search NGOs by name or area..."
-              className="text-xs h-9"
+              className="text-xs"
               value={search}
               onChange={(e: any) => setSearch(e.target.value)}
             />
             <select
-              className="border border-slate-300 rounded-lg px-3 text-xs font-bold outline-none"
+              className="min-h-10 rounded-xl border border-slate-300 px-3 text-xs font-bold outline-none"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -159,7 +159,7 @@ const AdminNGOManagement: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="outline" size="sm" className="h-8">
+                        <Button variant="outline" size="sm">
                           Audit
                         </Button>
                       </td>
@@ -179,7 +179,7 @@ const AdminNGOManagement: React.FC = () => {
 
         {/* Details Panel */}
         <div className="space-y-4">
-          <Card className="p-6 border-slate-200 min-h-[400px]">
+          <Card className="min-h-[320px] border-slate-200 p-5 sm:min-h-[400px] sm:p-6">
             {selectedNGO ? (
               <div className="space-y-6">
                 <div>

@@ -46,23 +46,23 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onBackToLogin }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto py-20 px-6">
-      <Card className="p-8 space-y-8">
+    <div className="mx-auto max-w-md px-4 py-10 sm:px-6 sm:py-16">
+      <Card className="space-y-6 p-5 sm:p-7">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900">Create Account</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Create Account</h2>
           <p className="text-slate-500 text-sm font-medium">
             Join WasteFoodLink today
           </p>
         </div>
 
         {/* Role Switch */}
-        <div className="flex p-1 bg-slate-100 rounded-xl">
+        <div className="flex rounded-2xl bg-slate-100 p-1">
           {Object.values(UserRole).map((r) => (
             <button
               type="button"
               key={r}
               onClick={() => setRole(r)}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition-all sm:text-xs ${
                 role === r
                   ? "bg-white text-emerald-600 shadow-sm"
                   : "text-slate-500"
@@ -107,7 +107,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onBackToLogin }) => {
             onChange={(e: any) => setLocation(e.target.value)}
           />
 
-          <Button fullWidth size="lg" disabled={loading}>
+          <Button fullWidth disabled={loading}>
             {loading ? "Creating account..." : "Register"}
           </Button>
         </form>

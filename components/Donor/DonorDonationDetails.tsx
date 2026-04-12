@@ -23,8 +23,8 @@ const DonorDonationDetails: React.FC<Props> = ({ donationId, onClose }) => {
   if (loading) return <div className="p-6">Loading...</div>;
 
   return (
-    <Card className="p-6 space-y-4">
-      <h3 className="text-lg font-bold">Donation Details</h3>
+    <Card className="w-full max-w-lg p-5 sm:p-6 space-y-4">
+      <h3 className="text-base font-bold sm:text-lg">Donation Details</h3>
 
       <div><b>Food:</b> {data.foodType}</div>
       <div><b>Quantity:</b> {data.quantity}</div>

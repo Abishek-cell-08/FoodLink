@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 import { DonationStatus } from "../../types";
 import { Button, Card, StatusBadge } from "../../components/UI";
 import api from "../../api/client";
+import LivePickupTracker from "../Tracking/LivePickupTracker";
+import { openExternalUrl } from "../../utils/platform";
 
 interface NGORequestItem {
   requestId: number;
-  id: number; // donation id
+  id: number;
   foodType: string;
   quantity: string;
   expiryWindow?: string;
   donorName?: string;
   location?: string;
   status: DonationStatus;
-
-  // ✅ New: coordinates from backend (Donation.to_dict)
   pickupLat?: number;
   pickupLng?: number;
+  trackingEnabled?: boolean;
+  trackingStatus?: string | null;
 }
 
 interface NGORequestsProps {
@@ -26,6 +28,7 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
   const [items, setItems] = useState<NGORequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [trackingRequestId, setTrackingRequestId] = useState<number | null>(null);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -45,41 +48,26 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
     fetchRequests();
   }, []);
 
-  const handleVerify = async (requestId: number) => {
-    try {
-      await api.post(`/api/ngo/verify/${requestId}`);
-      alert("Pickup verified successfully!");
-      fetchRequests(); // refresh list
-    } catch (err: any) {
-      console.error("Verification failed", err);
-      alert(err.response?.data?.message || "Verification failed");
-    }
-  };
-
-  // -------- Map Handler (OpenStreetMap - Free) --------
-  const openMap = (d: NGORequestItem) => {
+  const openMap = (item: NGORequestItem) => {
     let url = "";
 
-    if (d.pickupLat != null && d.pickupLng != null) {
-      // Use coordinates if available
-      url = `https://www.openstreetmap.org/?mlat=${d.pickupLat}&mlon=${d.pickupLng}#map=16/${d.pickupLat}/${d.pickupLng}`;
-    } else if (d.location) {
-      // Fallback: search by address string
-      const q = encodeURIComponent(d.location);
-      url = `https://www.openstreetmap.org/search?query=${q}`;
+    if (item.pickupLat != null && item.pickupLng != null) {
+      url = `https://www.openstreetmap.org/?mlat=${item.pickupLat}&mlon=${item.pickupLng}#map=16/${item.pickupLat}/${item.pickupLng}`;
+    } else if (item.location) {
+      url = `https://www.openstreetmap.org/search?query=${encodeURIComponent(item.location)}`;
     } else {
       alert("Location not available for this donation");
       return;
     }
 
-    window.open(url, "_blank");
+    openExternalUrl(url);
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Active Requests</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Active Requests</h2>
           <p className="text-slate-500 text-sm">
             Track claimed donations and verify pickups
           </p>
@@ -111,24 +99,24 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
 
       {!loading && !error && (
         <div className="space-y-4">
-          {items.map((d) => (
-            <Card key={d.requestId} className="p-0 overflow-hidden border-slate-200">
-              <div className="grid grid-cols-1 lg:grid-cols-5 items-center">
+          {items.map((item) => (
+            <Card key={item.requestId} className="p-0 overflow-hidden border-slate-200">
+              <div className="grid grid-cols-1 items-center lg:grid-cols-5">
                 <div className="p-6 col-span-2">
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                        d.status === DonationStatus.PICKED_UP
+                        item.status === DonationStatus.PICKED_UP
                           ? "bg-emerald-100 text-emerald-600"
                           : "bg-blue-100 text-blue-600"
                       }`}
                     >
-                      {d.foodType.charAt(0)}
+                      {item.foodType.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900">{d.foodType}</h4>
+                      <h4 className="font-bold text-slate-900">{item.foodType}</h4>
                       <p className="text-xs text-slate-500">
-                        {d.donorName ?? "Donor"} • {d.location ?? "Location"}
+                        {item.donorName ?? "Donor"} • {item.location ?? "Location"}
                       </p>
                     </div>
                   </div>
@@ -138,7 +126,7 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                   <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
                     Quantity
                   </div>
-                  <div className="text-sm font-bold text-slate-900">{d.quantity}</div>
+                  <div className="text-sm font-bold text-slate-900">{item.quantity}</div>
                 </div>
 
                 <div className="p-6 bg-slate-50/50 h-full flex flex-col justify-center">
@@ -146,31 +134,38 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                     Pickup Window
                   </div>
                   <div className="text-sm font-bold text-slate-900">
-                    {d.expiryWindow ?? "-"}
+                    {item.expiryWindow ?? "-"}
                   </div>
                 </div>
 
-                <div className="p-6 flex items-center justify-between lg:justify-end gap-6">
-                  <StatusBadge status={d.status} />
-                  <div className="flex gap-2">
-                    {/* ✅ Wired Location Button */}
+                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 lg:justify-end">
+                  <StatusBadge status={item.status} />
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-9"
-                      onClick={() => openMap(d)}
+                      onClick={() => openMap(item)}
                     >
                       Location
                     </Button>
 
-                    {d.status === DonationStatus.ALLOCATED && (
+                    {item.status === DonationStatus.ALLOCATED && (
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="h-9"
                         onClick={onScan}
                       >
                         Scan QR
+                      </Button>
+                    )}
+                    {item.trackingEnabled && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-emerald-200 text-emerald-700"
+                        onClick={() => setTrackingRequestId(item.requestId)}
+                      >
+                        Live Track
                       </Button>
                     )}
                   </div>
@@ -181,19 +176,19 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-1.5 h-1.5 rounded-full ${
-                      d.status === DonationStatus.PICKED_UP
+                      item.status === DonationStatus.PICKED_UP
                         ? "bg-emerald-500"
                         : "bg-blue-500"
                     }`}
-                  ></div>
+                  />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                    {d.status === DonationStatus.ALLOCATED
+                    {item.status === DonationStatus.ALLOCATED
                       ? "Pending Fulfillment"
                       : "Successfully Redistributed"}
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium">
-                  Request ID: {d.requestId}
+                  Request ID: {item.requestId}
                 </span>
               </div>
             </Card>
@@ -218,6 +213,16 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {trackingRequestId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <LivePickupTracker
+            role="NGO"
+            requestId={trackingRequestId}
+            onClose={() => setTrackingRequestId(null)}
+          />
         </div>
       )}
     </div>

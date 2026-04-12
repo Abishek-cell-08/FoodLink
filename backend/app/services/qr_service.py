@@ -10,7 +10,7 @@ def verify_qr(request_id):
         return False
 
     # Mark pickup as verified
-    pickup.status = "VERIFIED"
+    pickup.status = "COMPLETED"
     pickup.verified_at = datetime.utcnow()
 
     # Get the request

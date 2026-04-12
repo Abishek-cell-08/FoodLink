@@ -62,10 +62,10 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">System Health</h2>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">System Health</h2>
           <p className="text-slate-500 text-sm">
             Real-time platform monitoring and proactive risk management
           </p>
@@ -99,7 +99,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 {stat.label}
               </div>
-              <div className="text-2xl font-black text-slate-900">
+              <div className="text-xl font-black text-slate-900 sm:text-2xl">
                 {stat.val}
               </div>
               <div
@@ -123,7 +123,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Alerts */}
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="text-lg font-bold text-slate-900">
+          <h3 className="text-base font-bold text-slate-900 sm:text-lg">
             Critical System Flags
           </h3>
           <div className="space-y-3">

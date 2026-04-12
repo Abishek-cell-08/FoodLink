@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Input, Card } from "../UI";
 import api from "../../api/client";
+import { getGeolocation } from "../../utils/platform";
 
 interface AddFoodFormProps {
   onCancel: () => void;
@@ -12,33 +13,29 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
   const [expiryHours, setExpiryHours] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [notes, setNotes] = useState("");
-
-  // ✅ NEW: Coordinates
   const [pickupLat, setPickupLat] = useState<number | null>(null);
   const [pickupLng, setPickupLng] = useState<number | null>(null);
   const [locStatus, setLocStatus] = useState<string>("Detecting location...");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Auto-detect location on mount
   useEffect(() => {
-    if (!navigator.geolocation) {
+    const geolocation = getGeolocation();
+    if (!geolocation) {
       setLocStatus("Geolocation not supported");
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setPickupLat(latitude);
         setPickupLng(longitude);
-        setLocStatus("📍 Location detected");
-        console.log("Detected location:", latitude, longitude);
+        setLocStatus("Location detected");
       },
-      (err) => {
-        console.warn("Location error:", err);
-        setLocStatus("⚠️ Location not available (you can still submit)");
+      (positionError) => {
+        console.warn("Location error:", positionError);
+        setLocStatus("Location not available, but you can still submit");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -57,12 +54,12 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
         expiryHours: Number(expiryHours),
         pickupAddress,
         notes,
-        pickupLat, // ✅ send coords
-        pickupLng, // ✅ send coords
+        pickupLat,
+        pickupLng,
       });
 
       alert("Donation posted successfully!");
-      onCancel(); // go back / close form
+      onCancel();
     } catch (err: any) {
       console.error("Failed to create donation", err);
       setError(err.response?.data?.message || "Failed to create donation");
@@ -72,13 +69,13 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
   };
 
   return (
-    <Card className="p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-slate-900 mb-6">
+    <Card className="mx-auto max-w-2xl rounded-[28px] p-5 sm:p-7">
+      <h2 className="mb-5 text-xl font-bold text-slate-900 sm:mb-6 sm:text-2xl">
         List Surplus Food
       </h2>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
           <Input
             label="Food Description"
             placeholder="e.g. Mixed Vegetarian Lunch"
@@ -110,7 +107,6 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
           />
         </div>
 
-        {/* ✅ Location status */}
         <div className="text-sm text-slate-600">
           {locStatus}
           {pickupLat != null && pickupLng != null && (
@@ -125,7 +121,7 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
             Dietary Information & Storage
           </label>
           <textarea
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none min-h-[100px]"
+            className="min-h-[100px] w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:px-4"
             placeholder="Allergens, refrigeration needs, etc."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -136,11 +132,11 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
           <div className="text-red-600 text-sm font-medium">{error}</div>
         )}
 
-        <div className="flex gap-4">
-          <Button className="flex-1" size="lg" type="submit" disabled={loading}>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button className="flex-1" type="submit" disabled={loading}>
             {loading ? "Posting..." : "Post Donation"}
           </Button>
-          <Button variant="outline" size="lg" type="button" onClick={onCancel}>
+          <Button variant="outline" type="button" onClick={onCancel}>
             Cancel
           </Button>
         </div>

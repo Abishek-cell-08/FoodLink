@@ -2,19 +2,31 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# WasteFoodLink
 
-This contains everything you need to run your app locally.
+This app runs as a Vite web app and is now prepared to be wrapped as a hybrid mobile app with Capacitor.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1iLW5r8Z-d7A4UNfQxvQDy0X7qMYYbrVY
+## Run locally
 
-## Run Locally
+Prerequisites: Node.js
 
-**Prerequisites:**  Node.js
+1. Install dependencies with `npm install`
+2. Copy `.env.example` to `.env.local`
+3. Set `VITE_API_BASE_URL` to your backend URL
+4. Set `VITE_ANDROID_API_BASE_URL` to the same backend URL when installing on a real phone over Wi-Fi/LAN
+5. If you test Android over USB with `adb reverse`, you can set `VITE_ANDROID_API_BASE_URL=http://127.0.0.1:5000`
+6. Run the frontend with `npm run dev`
 
+## Mobile wrapper setup
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Install the new Capacitor dependencies with `npm install`
+2. Build the web bundle with `npm run build`
+3. Sync native projects with `npm run mobile:sync`
+4. Open Android Studio with `npm run mobile:android`
+5. Open Xcode with `npm run mobile:ios`
+
+## Important for phone testing
+
+If you use LAN testing on a real phone, do not use `127.0.0.1`. Use your machine's local network IP instead, for example `http://192.168.1.10:5000`.
+
+If you use USB testing with `adb reverse tcp:5000 tcp:5000`, Android can safely use `http://127.0.0.1:5000`.

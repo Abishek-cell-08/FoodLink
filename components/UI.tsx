@@ -16,7 +16,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
   
   const variants = {
     primary: 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500',
@@ -26,9 +26,9 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-5 py-2.5 text-base',
-    lg: 'px-8 py-3.5 text-lg'
+    sm: 'min-h-9 px-3 py-2 text-xs sm:text-sm',
+    md: 'min-h-10 px-4 py-2.5 text-sm sm:text-[15px]',
+    lg: 'min-h-11 px-4 py-3 text-sm sm:px-5 sm:text-base'
   };
 
   const width = fullWidth ? 'w-full' : '';
@@ -52,14 +52,14 @@ export const StatusBadge: React.FC<{ status: DonationStatus }> = ({ status }) =>
   };
 
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles[status]}`}>
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${styles[status]}`}>
       {status.replace('_', ' ')}
     </span>
   );
 };
 
 export const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
+  <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl ${className}`}>
     {children}
   </div>
 );
@@ -68,7 +68,7 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { lab
   <div className="flex flex-col gap-1.5 w-full">
     {label && <label className="text-sm font-medium text-slate-700">{label}</label>}
     <input 
-      className={`px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all ${className}`}
+      className={`min-h-11 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:px-4 ${className}`}
       {...props}
     />
   </div>

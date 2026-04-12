@@ -23,12 +23,18 @@ export interface User {
 }
 
 export interface FoodDonation {
-  id: number;
+  id: number | string;
+  donorId?: string;
+  donorName?: string;
   foodType: string;
   quantity: string;
   expiryWindow: string;   // e.g. "3 hrs"
+  expiryHours?: number;
   status: DonationStatus;
   createdAt: string;      // ISO string from backend
+  location?: string;
+  allocatedTo?: string;
+  qrCodeData?: string;
   distanceKm?: number | null; // computed later, may be null
 }
 

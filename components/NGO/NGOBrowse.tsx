@@ -1,35 +1,38 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { User, DonationStatus } from "../../types";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Input } from "../../components/UI";
+import { DonationStatus, User } from "../../types";
 import api from "../../api/client";
+import { openExternalUrl } from "../../utils/platform";
 
 interface Donation {
   id: number;
   foodType: string;
   quantity: string;
   status: DonationStatus;
-  createdAt: string;   // ISO from backend
-  expiresAt: string;   // ISO from backend
+  createdAt: string;
+  expiresAt: string;
   distanceKm?: number;
   donorName?: string;
   location?: string;
   priorityScore?: number;
+  priorityTier?: string;
+  decisionSignals?: string[];
   pickupLat?: number;
   pickupLng?: number;
 }
 
 interface NGOBrowseProps {
   user: User;
+  onClaim?: () => void;
 }
 
-const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
+const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"RANK" | "DISTANCE" | "EXPIRY">("RANK");
   const [items, setItems] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // -------- Time Helpers --------
   const parseUTC = (iso: string) => new Date(iso + "Z");
 
   const getRemainingMs = (expiresAt: string) => {
@@ -47,11 +50,9 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
     const totalMinutes = Math.floor(diffMs / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-
     return hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`;
   };
 
-  // -------- API --------
   const fetchDonations = async () => {
     setLoading(true);
     setError(null);
@@ -70,16 +71,13 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
 
   useEffect(() => {
     fetchDonations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const processedDonations = useMemo(() => {
-    let result = [...items];
+    const result = [...items];
 
     if (sort === "RANK") {
-      result.sort(
-        (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0)
-      );
+      result.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0));
     }
 
     if (sort === "DISTANCE") {
@@ -87,9 +85,7 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
     }
 
     if (sort === "EXPIRY") {
-      result.sort(
-        (a, b) => getRemainingMs(a.expiresAt) - getRemainingMs(b.expiresAt)
-      );
+      result.sort((a, b) => getRemainingMs(a.expiresAt) - getRemainingMs(b.expiresAt));
     }
 
     return result;
@@ -100,39 +96,39 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
       await api.post(`/api/ngo/claim/${id}`);
       alert("Donation claimed successfully!");
       fetchDonations();
+      onClaim?.();
     } catch (err: any) {
       console.error("Failed to claim donation", err);
       alert(err.response?.data?.message || "Failed to claim donation");
     }
   };
 
-  // -------- Map Handler (OpenStreetMap - Free) --------
-  const openMap = (d: Donation) => {
+  const openMap = (donation: Donation) => {
     let url = "";
 
-    if (d.pickupLat != null && d.pickupLng != null) {
-      url = `https://www.openstreetmap.org/?mlat=${d.pickupLat}&mlon=${d.pickupLng}#map=16/${d.pickupLat}/${d.pickupLng}`;
-    } else if (d.location) {
-      const q = encodeURIComponent(d.location);
-      url = `https://www.openstreetmap.org/search?query=${q}`;
+    if (donation.pickupLat != null && donation.pickupLng != null) {
+      url = `https://www.openstreetmap.org/?mlat=${donation.pickupLat}&mlon=${donation.pickupLng}#map=16/${donation.pickupLat}/${donation.pickupLng}`;
+    } else if (donation.location) {
+      const query = encodeURIComponent(donation.location);
+      url = `https://www.openstreetmap.org/search?query=${query}`;
     } else {
       alert("Location not available for this donation");
       return;
     }
 
-    window.open(url, "_blank");
+    openExternalUrl(url);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Food Marketplace</h2>
-          <p className="text-slate-500 text-sm">
-            Discover and claim available surplus food
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Food Marketplace</h2>
+          <p className="text-sm text-slate-500">
+            Discover and claim surplus food ranked by strategic pickup value
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             placeholder="Search food type..."
             className="w-full md:w-64"
@@ -140,9 +136,9 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
             onChange={(e: any) => setSearch(e.target.value)}
           />
           <select
-            className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-sm font-medium outline-none"
+            className="min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none"
             value={sort}
-            onChange={(e) => setSort(e.target.value as any)}
+            onChange={(e) => setSort(e.target.value as "RANK" | "DISTANCE" | "EXPIRY")}
           >
             <option value="RANK">Sort by AI Rank</option>
             <option value="DISTANCE">Sort by Nearest</option>
@@ -151,89 +147,80 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user }) => {
         </div>
       </div>
 
-      {loading && (
-        <div className="text-center py-20 text-slate-400 font-medium">
-          Loading marketplace...
-        </div>
-      )}
+      {loading && <div className="py-20 text-center font-medium text-slate-400">Loading marketplace...</div>}
 
-      {error && (
-        <div className="text-center py-10 text-red-600 font-medium">
-          {error}
-        </div>
-      )}
+      {error && <div className="py-10 text-center font-medium text-red-600">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {processedDonations.map((d) => {
-            const remaining = formatTimeLeft(d.expiresAt);
-            const diffMs = getRemainingMs(d.expiresAt);
-            const totalMinutes = Math.floor(diffMs / 60000);
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {processedDonations.map((donation) => {
+            const remaining = formatTimeLeft(donation.expiresAt);
+            const totalMinutes = Math.floor(getRemainingMs(donation.expiresAt) / 60000);
 
             return (
               <Card
-                key={d.id}
-                className="group relative p-6 flex flex-col h-full border-slate-200 hover:border-emerald-300 transition-all hover:shadow-lg"
+                key={donation.id}
+                className="group relative flex h-full flex-col border-slate-200 p-4 transition-all hover:border-emerald-300 hover:shadow-lg sm:p-5"
               >
-                <div className="absolute -top-3 -right-3 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm group-hover:border-emerald-500">
-                  {d.priorityScore ?? "-"}
+                <div className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-black shadow-sm group-hover:border-emerald-500">
+                  {donation.priorityScore ?? "-"}
                 </div>
 
-                <div className="flex justify-between items-start mb-4">
+                <div className="mb-4 flex items-start justify-between">
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      totalMinutes <= 120
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-700"
+                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                      totalMinutes <= 120 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
                     }`}
                   >
                     {totalMinutes <= 120 ? "Critical" : "Available"}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium">
-                    {d.distanceKm != null
-                      ? `${d.distanceKm.toFixed(1)} km away`
-                      : "Unknown distance"}
+                  <span className="text-xs font-medium text-slate-400">
+                    {donation.distanceKm != null ? `${donation.distanceKm.toFixed(1)} km away` : "Unknown distance"}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 mb-1">
-                  {d.foodType}
-                </h3>
-                <p className="text-xs text-slate-500 mb-6">
-                  {d.donorName ?? "Donor"} • {d.location ?? "Location"}
-                </p>
+                {donation.priorityTier && (
+                  <div className="mb-3 inline-flex rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-700">
+                    {donation.priorityTier} priority
+                  </div>
+                )}
 
-                <div className="space-y-3 mt-auto pt-4 border-t border-slate-50">
+                <h3 className="mb-1 text-base font-bold text-slate-900 sm:text-lg">{donation.foodType}</h3>
+                <p className="mb-4 text-xs text-slate-500">{donation.donorName ?? "Donor"} • {donation.location ?? "Location"}</p>
+
+                {donation.decisionSignals && donation.decisionSignals.length > 0 && (
+                  <div className="mb-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    {donation.decisionSignals.slice(0, 2).join(" • ")}
+                  </div>
+                )}
+
+                <div className="mt-auto space-y-3 border-t border-slate-50 pt-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400 font-medium">Quantity:</span>
-                    <span className="font-bold text-slate-900">
-                      {d.quantity}
-                    </span>
+                    <span className="font-medium text-slate-400">Quantity:</span>
+                    <span className="font-bold text-slate-900">{donation.quantity}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400 font-medium">Expires:</span>
+                    <span className="font-medium text-slate-400">Expires:</span>
                     <span
                       className={`font-bold ${
-                        remaining === "Expired" || totalMinutes <= 120
-                          ? "text-red-600"
-                          : "text-slate-900"
+                        remaining === "Expired" || totalMinutes <= 120 ? "text-red-600" : "text-slate-900"
                       }`}
                     >
                       {remaining}
                     </span>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <Button fullWidth onClick={() => handleClaim(d.id)}>
+                    <Button fullWidth size="sm" onClick={() => handleClaim(donation.id)}>
                       Claim Now
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       className="px-3"
-                      onClick={() => openMap(d)}
+                      onClick={() => openMap(donation)}
                       title="Open in map"
                     >
-                      📍
+                      Map
                     </Button>
                   </div>
                 </div>

@@ -5,3 +5,6 @@ Flask-JWT-Extended
 psycopg2-binary
 python-dotenv
 Flask-CORS
+Flask-SocketIO
+google-genai
+qrcode

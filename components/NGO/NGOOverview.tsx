@@ -12,6 +12,8 @@ interface DonationItem {
   donorName?: string;
   location?: string;
   priorityScore: number;
+  priorityTier?: string;
+  decisionSignals?: string[];
 }
 
 interface APIResponse<T> {
@@ -70,9 +72,9 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
           NGO Strategic Overview
         </h2>
         <p className="text-slate-500 text-sm">
@@ -88,8 +90,8 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 sm:text-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               AI-Recommended Picks
             </h3>
@@ -113,7 +115,7 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                 return (
                   <Card
                     key={d.id}
-                    className="p-5 flex items-center gap-6 border-slate-100 hover:border-emerald-200 transition-all"
+                    className="flex flex-col gap-4 border-slate-100 p-4 transition-all hover:border-emerald-200 sm:flex-row sm:items-center sm:gap-6 sm:p-5"
                   >
                     <div className="flex flex-col items-center justify-center bg-slate-50 rounded-lg p-3 min-w-[80px]">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
@@ -125,14 +127,24 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="font-bold text-slate-900">{d.foodType}</h4>
+                      <h4 className="text-base font-bold text-slate-900">{d.foodType}</h4>
                       <p className="text-xs text-slate-500">
                         {d.donorName ?? "Donor"} •{" "}
                         {d.distanceKm != null ? `${d.distanceKm.toFixed(1)} km away` : "-"}
                       </p>
+                      {d.priorityTier && (
+                        <div className="mt-2 inline-flex rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                          {d.priorityTier}
+                        </div>
+                      )}
+                      {d.decisionSignals && d.decisionSignals.length > 0 && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          {d.decisionSignals.slice(0, 2).join(" • ")}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="text-right mr-4">
+                    <div className="mr-0 text-left sm:mr-4 sm:text-right">
                       <div
                         className={`text-xs font-bold ${
                           remaining === "Expired" ? "text-red-600" : "text-slate-900"
@@ -161,11 +173,11 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
           )}
         </div>
 
-        <Card className="p-6 bg-slate-900 text-white border-none shadow-xl">
+        <Card className="border-none bg-slate-900 p-5 text-white shadow-xl sm:p-6">
           <h3 className="font-bold mb-4">Priority Algorithm</h3>
           <p className="text-sm text-slate-400">
-            Rankings are calculated based on expiry urgency, distance, and
-            historical performance.
+            Rankings combine urgency decay, travel feasibility, perishability,
+            quantity utility, demand pressure, donor reliability, and NGO execution capacity.
           </p>
         </Card>
       </div>

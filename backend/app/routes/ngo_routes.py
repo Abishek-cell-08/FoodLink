@@ -1,24 +1,22 @@
+from datetime import datetime
+
 from flask import Blueprint, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.utils.role_guard import role_required
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app import db
 from app.models.donation_model import Donation
-from app.models.user_model import User
-from app.models.request_model import Request
 from app.models.pickup_model import Pickup
-
-from app.services.allocation_service import calculate_priority
+from app.models.request_model import Request
+from app.models.user_model import User
+from app.services.allocation_service import rank_donations_for_ngo, score_donation_for_ngo
 from app.services.qr_service import verify_qr
+from app.services.tracking_socket_service import emit_tracking_session_update
 from app.utils.response_helper import success_response
-from app.utils.distance import haversine_km  # ✅ distance helper
+from app.utils.role_guard import role_required
 
 ngo_bp = Blueprint("ngo", __name__, url_prefix="/api/ngo")
 
 
-# =====================
-# NGO Overview (Top 3 recommendations)
-# =====================
 @ngo_bp.route("/overview", methods=["GET"])
 @jwt_required()
 @role_required("NGO")
@@ -26,31 +24,10 @@ def ngo_overview():
     ngo_id = int(get_jwt_identity())
     ngo = User.query.get_or_404(ngo_id)
 
-    donations = Donation.query.filter_by(status="PENDING").all()
-    ranked = []
-
-    for d in donations:
-        distance_km = haversine_km(
-            ngo.lat, ngo.lng,
-            d.pickup_lat, d.pickup_lng
-        )
-
-        score = calculate_priority(d, ngo, distance_km or 9999)
-
-        ranked.append({
-            **d.to_dict(),
-            "distanceKm": distance_km,
-            "priorityScore": score
-        })
-
-    ranked.sort(key=lambda x: x["priorityScore"], reverse=True)
-
-    return success_response("NGO overview", ranked[:3])
+    ranked = [_serialize_ranked_donation(item) for item in rank_donations_for_ngo(ngo)[:3]]
+    return success_response("NGO overview", ranked)
 
 
-# =====================
-# NGO Dashboard (All ranked) (kept for API completeness)
-# =====================
 @ngo_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
 @role_required("NGO")
@@ -58,29 +35,10 @@ def ngo_dashboard():
     ngo_id = int(get_jwt_identity())
     ngo = User.query.get_or_404(ngo_id)
 
-    donations = Donation.query.filter_by(status="PENDING").all()
-    ranked = []
-
-    for d in donations:
-        distance_km = haversine_km(
-            ngo.lat, ngo.lng,
-            d.pickup_lat, d.pickup_lng
-        )
-
-        ranked.append({
-            **d.to_dict(),
-            "distanceKm": distance_km,
-            "priorityScore": calculate_priority(d, ngo, distance_km or 9999)
-        })
-
-    ranked.sort(key=lambda x: x["priorityScore"], reverse=True)
-
+    ranked = [_serialize_ranked_donation(item) for item in rank_donations_for_ngo(ngo)]
     return success_response("NGO dashboard", ranked)
 
 
-# =====================
-# Browse Food
-# =====================
 @ngo_bp.route("/browse", methods=["GET"])
 @jwt_required()
 @role_required("NGO")
@@ -89,63 +47,54 @@ def browse_food():
     ngo = User.query.get_or_404(ngo_id)
 
     search = request.args.get("search", "")
-
     donations = Donation.query.filter(
         Donation.status == "PENDING",
-        Donation.food_type.ilike(f"%{search}%")
+        Donation.food_type.ilike(f"%{search}%"),
     ).all()
 
-    results = []
-    for d in donations:
-        distance_km = haversine_km(
-            ngo.lat, ngo.lng,
-            d.pickup_lat, d.pickup_lng
-        )
-
-        results.append({
-            **d.to_dict(),
-            "distanceKm": distance_km,
-            "priorityScore": calculate_priority(d, ngo, distance_km or 9999)
-        })
-
+    results = [_serialize_ranked_donation(item) for item in rank_donations_for_ngo(ngo, donations=donations)]
     return success_response("Food marketplace", results)
 
 
-# =====================
-# Claim Donation
-# =====================
 @ngo_bp.route("/claim/<int:donation_id>", methods=["POST"])
 @jwt_required()
 @role_required("NGO")
 def claim_donation(donation_id):
     ngo_id = int(get_jwt_identity())
+    ngo = User.query.get_or_404(ngo_id)
     donation = Donation.query.get_or_404(donation_id)
 
     if donation.status != "PENDING":
         return {"message": "Donation already claimed"}, 400
 
+    scored = score_donation_for_ngo(donation, ngo)
     donation.status = "ALLOCATED"
 
     request_entry = Request(
         donation_id=donation.id,
         ngo_id=ngo_id,
-        priority_score=0
+        priority_score=scored["priorityScore"],
     )
 
     db.session.add(request_entry)
-    db.session.flush()  # ensure request_entry.id exists
+    db.session.flush()
 
-    pickup = Pickup(request_id=request_entry.id)
+    pickup = Pickup(
+        request_id=request_entry.id,
+        status="TRACKING_ACTIVE",
+        ngo_live_lat=ngo.lat,
+        ngo_live_lng=ngo.lng,
+        ngo_location_updated_at=datetime.utcnow() if ngo.lat is not None and ngo.lng is not None else None,
+        donor_live_lat=donation.pickup_lat,
+        donor_live_lng=donation.pickup_lng,
+        donor_location_updated_at=datetime.utcnow() if donation.pickup_lat is not None and donation.pickup_lng is not None else None,
+    )
     db.session.add(pickup)
 
     db.session.commit()
-
     return success_response("Donation claimed successfully")
 
 
-# =====================
-# Active Requests
-# =====================
 @ngo_bp.route("/requests", methods=["GET"])
 @jwt_required()
 @role_required("NGO")
@@ -155,21 +104,24 @@ def active_requests():
     requests = Request.query.filter_by(ngo_id=ngo_id).all()
     response = []
 
-    for r in requests:
-        donation = Donation.query.get(r.donation_id)
+    for request_row in requests:
+        donation = Donation.query.get(request_row.donation_id)
+        pickup = Pickup.query.filter_by(request_id=request_row.id).first()
         if donation:
-            response.append({
-                "requestId": r.id,
-                **donation.to_dict(),
-                "status": donation.status
-            })
+            response.append(
+                {
+                    "requestId": request_row.id,
+                    **donation.to_dict(),
+                    "status": donation.status,
+                    "priorityScore": request_row.priority_score,
+                    "trackingEnabled": pickup is not None and pickup.verified_at is None,
+                    "trackingStatus": pickup.status if pickup else None,
+                }
+            )
 
     return success_response("Active requests", response)
 
 
-# =====================
-# Verify QR
-# =====================
 @ngo_bp.route("/verify/<int:request_id>", methods=["POST"])
 @jwt_required()
 @role_required("NGO")
@@ -178,3 +130,85 @@ def qr_verify(request_id):
         return success_response("Pickup verified")
 
     return {"message": "Verification failed"}, 400
+
+
+@ngo_bp.route("/tracking/<int:request_id>", methods=["GET"])
+@jwt_required()
+@role_required("NGO")
+def get_tracking_session(request_id):
+    ngo_id = int(get_jwt_identity())
+    request_row = Request.query.filter_by(id=request_id, ngo_id=ngo_id).first_or_404()
+    donation = Donation.query.get_or_404(request_row.donation_id)
+    pickup = Pickup.query.filter_by(request_id=request_row.id).first_or_404()
+    ngo = User.query.get(ngo_id)
+
+    return success_response("Tracking session", _serialize_tracking_session(request_row, donation, pickup, ngo))
+
+
+@ngo_bp.route("/tracking/<int:request_id>/location", methods=["POST"])
+@jwt_required()
+@role_required("NGO")
+def update_ngo_tracking_location(request_id):
+    ngo_id = int(get_jwt_identity())
+    request_row = Request.query.filter_by(id=request_id, ngo_id=ngo_id).first_or_404()
+    pickup = Pickup.query.filter_by(request_id=request_id).first_or_404()
+
+    payload = request.get_json(silent=True) or {}
+    lat = payload.get("lat")
+    lng = payload.get("lng")
+
+    if lat is None or lng is None:
+        return {"message": "lat and lng are required"}, 400
+
+    pickup.ngo_live_lat = float(lat)
+    pickup.ngo_live_lng = float(lng)
+    pickup.ngo_location_updated_at = datetime.utcnow()
+    if pickup.status == "SCHEDULED":
+        pickup.status = "TRACKING_ACTIVE"
+
+    db.session.commit()
+    donation = Donation.query.get_or_404(request_row.donation_id)
+    ngo = User.query.get(ngo_id)
+    session_payload = _serialize_tracking_session(request_row, donation, pickup, ngo)
+    emit_tracking_session_update(session_payload)
+    return success_response("NGO live location updated", session_payload)
+
+
+def _serialize_ranked_donation(item):
+    donation = item["donation"]
+    return {
+        **donation.to_dict(),
+        "distanceKm": item["distanceKm"],
+        "priorityScore": item["priorityScore"],
+        "priorityTier": item["priorityTier"],
+        "scoreBreakdown": item["scoreBreakdown"],
+        "decisionSignals": item["decisionSignals"],
+        "explainability": item["explainability"],
+    }
+
+
+def _serialize_tracking_session(request_row, donation, pickup, ngo):
+    return {
+        "requestId": request_row.id,
+        "donationId": donation.id,
+        "foodType": donation.food_type,
+        "quantity": donation.quantity,
+        "trackingStatus": pickup.status,
+        "verifiedAt": pickup.verified_at.isoformat() if pickup.verified_at else None,
+        "pickupAddress": donation.pickup_address,
+        "ngoName": ngo.name if ngo else None,
+        "donorLocation": {
+            "lat": pickup.donor_live_lat if pickup.donor_live_lat is not None else donation.pickup_lat,
+            "lng": pickup.donor_live_lng if pickup.donor_live_lng is not None else donation.pickup_lng,
+            "updatedAt": pickup.donor_location_updated_at.isoformat() if pickup.donor_location_updated_at else None,
+        },
+        "ngoLocation": {
+            "lat": pickup.ngo_live_lat,
+            "lng": pickup.ngo_live_lng,
+            "updatedAt": pickup.ngo_location_updated_at.isoformat() if pickup.ngo_location_updated_at else None,
+        },
+        "destination": {
+            "lat": donation.pickup_lat,
+            "lng": donation.pickup_lng,
+        },
+    }
