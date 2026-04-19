@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card } from "../UI";
+import { Button, Card, InfoPopover } from "../UI";
 import api from "../../api/client";
 
 interface DonationItem {
@@ -71,6 +71,13 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
     fetchOverview();
   }, []);
 
+  const topRecommendation = recommendations[0];
+  const strategicCount = recommendations.filter((item) => item.priorityTier === "STRATEGIC").length;
+  const avgPriorityScore = recommendations.length
+    ? (recommendations.reduce((sum, item) => sum + item.priorityScore, 0) / recommendations.length).toFixed(1)
+    : "0.0";
+  const signalPreview = topRecommendation?.decisionSignals?.slice(0, 3) ?? [];
+
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       <div>
@@ -88,7 +95,7 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 sm:text-lg">
@@ -115,9 +122,14 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                 return (
                   <Card
                     key={d.id}
-                    className="flex flex-col gap-4 border-slate-100 p-4 transition-all hover:border-emerald-200 sm:flex-row sm:items-center sm:gap-6 sm:p-5"
+                    className="relative flex flex-col gap-4 border-slate-100 p-4 transition-all hover:border-emerald-200 md:flex-row md:items-center md:gap-5 sm:p-5"
                   >
-                    <div className="flex flex-col items-center justify-center bg-slate-50 rounded-lg p-3 min-w-[80px]">
+                    <InfoPopover
+                      className="absolute right-4 top-4"
+                      title={`${d.foodType} recommendation`}
+                      description="This recommendation card shows why the platform is suggesting this donation now, based on urgency, travel feasibility, and operational fit for NGO pickup."
+                    />
+                    <div className="flex w-full flex-row items-center justify-between rounded-lg bg-slate-50 p-3 md:min-w-[88px] md:w-auto md:flex-col md:justify-center">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">
                         Priority
                       </span>
@@ -126,9 +138,9 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                       </span>
                     </div>
 
-                    <div className="flex-1">
-                      <h4 className="text-base font-bold text-slate-900">{d.foodType}</h4>
-                      <p className="text-xs text-slate-500">
+                    <div className="min-w-0 flex-1 pr-10 md:pr-6">
+                      <h4 className="break-words text-base font-bold text-slate-900">{d.foodType}</h4>
+                      <p className="break-words text-xs text-slate-500">
                         {d.donorName ?? "Donor"} •{" "}
                         {d.distanceKm != null ? `${d.distanceKm.toFixed(1)} km away` : "-"}
                       </p>
@@ -144,7 +156,7 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                       )}
                     </div>
 
-                    <div className="mr-0 text-left sm:mr-4 sm:text-right">
+                    <div className="text-left md:mr-2 md:text-right">
                       <div
                         className={`text-xs font-bold ${
                           remaining === "Expired" ? "text-red-600" : "text-slate-900"
@@ -157,7 +169,7 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
                       </div>
                     </div>
 
-                    <Button variant="outline" size="sm" onClick={onBrowse}>
+                    <Button variant="outline" size="sm" className="w-full md:w-auto" onClick={onBrowse}>
                       View Details
                     </Button>
                   </Card>
@@ -173,12 +185,80 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
           )}
         </div>
 
-        <Card className="border-none bg-slate-900 p-5 text-white shadow-xl sm:p-6">
-          <h3 className="font-bold mb-4">Priority Algorithm</h3>
+        <Card className="relative border-none bg-slate-900 p-5 text-white shadow-xl sm:p-6">
+          <InfoPopover
+            className="absolute right-5 top-5"
+            title="Priority Algorithm"
+            description="This explains how the recommendation engine scores opportunities. Higher-ranked items usually combine stronger urgency, manageable travel, and better odds of successful pickup."
+            tone="dark"
+          />
+          <h3 className="mb-4 pr-10 font-bold">Priority Algorithm</h3>
           <p className="text-sm text-slate-400">
             Rankings combine urgency decay, travel feasibility, perishability,
             quantity utility, demand pressure, donor reliability, and NGO execution capacity.
           </p>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-white/5 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Live Picks
+              </div>
+              <div className="mt-2 text-xl font-black text-white">{recommendations.length}</div>
+            </div>
+            <div className="rounded-2xl bg-white/5 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Strategic
+              </div>
+              <div className="mt-2 text-xl font-black text-emerald-300">{strategicCount}</div>
+            </div>
+            <div className="rounded-2xl bg-white/5 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Avg Score
+              </div>
+              <div className="mt-2 text-xl font-black text-amber-300">{avgPriorityScore}</div>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+              Current Lead Signal
+            </div>
+            <div className="mt-2 text-sm font-bold text-white">
+              {topRecommendation ? topRecommendation.foodType : "No ranked item yet"}
+            </div>
+            <div className="mt-1 break-words text-xs text-slate-400">
+              {topRecommendation
+                ? `${topRecommendation.priorityScore} score${topRecommendation.priorityTier ? ` • ${topRecommendation.priorityTier}` : ""}`
+                : "Recommendations will appear here once pending donations are available."}
+            </div>
+            {signalPreview.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {signalPreview.map((signal) => (
+                  <span
+                    key={signal}
+                    className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-200"
+                  >
+                    {signal}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 space-y-2 text-xs text-slate-300">
+            <div className="flex flex-col gap-2 rounded-xl bg-white/5 px-3 py-2 sm:flex-row sm:items-start sm:justify-between">
+              <span>Urgency and perishability push expiring food upward.</span>
+              <span className="font-bold text-emerald-300">Time critical</span>
+            </div>
+            <div className="flex flex-col gap-2 rounded-xl bg-white/5 px-3 py-2 sm:flex-row sm:items-start sm:justify-between">
+              <span>Distance and feasibility reduce routes that are hard to complete.</span>
+              <span className="font-bold text-emerald-300">Route fit</span>
+            </div>
+            <div className="flex flex-col gap-2 rounded-xl bg-white/5 px-3 py-2 sm:flex-row sm:items-start sm:justify-between">
+              <span>Demand, quantity, and NGO readiness lift high-impact pickups.</span>
+              <span className="font-bold text-emerald-300">Impact fit</span>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

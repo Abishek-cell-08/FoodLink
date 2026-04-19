@@ -147,6 +147,45 @@ def list_ngos():
 
 
 # =====================
+# List Donors
+# =====================
+@admin_bp.route("/donors", methods=["GET"])
+@jwt_required()
+@role_required("ADMIN")
+def list_donors():
+    search = request.args.get("search", "")
+
+    donation_counts = dict(
+        db.session.query(Donation.donor_id, func.count(Donation.id))
+        .group_by(Donation.donor_id)
+        .all()
+    )
+
+    query = User.query.filter_by(role=UserRole.DONOR)
+
+    if search:
+        query = query.filter(
+            User.name.ilike(f"%{search}%") |
+            User.email.ilike(f"%{search}%") |
+            User.location.ilike(f"%{search}%")
+        )
+
+    donors = query.order_by(User.name.asc()).all()
+
+    result = []
+    for donor in donors:
+        result.append({
+            "id": donor.id,
+            "name": donor.name,
+            "email": donor.email,
+            "location": donor.location or "-",
+            "totalDonations": donation_counts.get(donor.id, 0),
+        })
+
+    return success_response("Donor list", result)
+
+
+# =====================
 # NGO Detail
 # =====================
 @admin_bp.route("/ngos/<int:ngo_id>", methods=["GET"])

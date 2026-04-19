@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../../api/client";
-import { Button, Card, StatusBadge } from "../../components/UI";
+import { Button, Card, InfoPopover, StatusBadge } from "../../components/UI";
 import {
   Bar,
   CartesianGrid,
@@ -192,11 +192,31 @@ const DonorOverview: React.FC<DonorOverviewProps> = ({
   }
 
   const stats = [
-    { label: "Total Donations", val: String(totalDonations) },
-    { label: "Pending", val: String(statusDistribution["PENDING"] ?? 0) },
-    { label: "Allocated", val: String(statusDistribution["ALLOCATED"] ?? 0) },
-    { label: "Picked Up", val: String(statusDistribution["PICKED_UP"] ?? 0) },
-    { label: "Active Tasks", val: String((statusDistribution["PENDING"] ?? 0) + (statusDistribution["ALLOCATED"] ?? 0)) },
+    {
+      label: "Total Donations",
+      val: String(totalDonations),
+      help: "The full number of donations you have posted in the selected period, regardless of current status.",
+    },
+    {
+      label: "Pending",
+      val: String(statusDistribution["PENDING"] ?? 0),
+      help: "Donations waiting to be matched or reviewed by the platform and NGOs.",
+    },
+    {
+      label: "Allocated",
+      val: String(statusDistribution["ALLOCATED"] ?? 0),
+      help: "Donations already assigned to an NGO but not yet marked as collected.",
+    },
+    {
+      label: "Picked Up",
+      val: String(statusDistribution["PICKED_UP"] ?? 0),
+      help: "Donations successfully completed and collected by an NGO.",
+    },
+    {
+      label: "Active Tasks",
+      val: String((statusDistribution["PENDING"] ?? 0) + (statusDistribution["ALLOCATED"] ?? 0)),
+      help: "A combined view of donations still in progress, including both pending and allocated items.",
+    },
   ];
 
   return (
@@ -217,9 +237,14 @@ const DonorOverview: React.FC<DonorOverviewProps> = ({
         {stats.map((s, i) => (
           <Card
             key={i}
-            className="border border-slate-200 bg-white p-4 shadow-sm"
+            className="relative border border-slate-200 bg-white p-4 shadow-sm"
           >
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <InfoPopover
+              className="absolute right-3 top-3"
+              title={s.label}
+              description={s.help}
+            />
+            <div className="pr-10 text-[10px] font-bold uppercase tracking-wider text-slate-500">
               {s.label || "-"}
             </div>
 
@@ -230,11 +255,16 @@ const DonorOverview: React.FC<DonorOverviewProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 overflow-hidden border-slate-200">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+        <Card className="relative lg:col-span-2 overflow-hidden border-slate-200">
+          <InfoPopover
+            className="absolute right-6 top-6 z-10"
+            title="Donation Activity Over Time"
+            description="This chart compares how many donations were completed, still active, or missed across the selected date range so you can spot patterns in your contribution flow."
+          />
           <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div>
+              <div className="pr-12">
                 <h3 className="text-base font-bold text-slate-900 sm:text-lg">
                   Donation Activity Over Time
                 </h3>
@@ -273,7 +303,7 @@ const DonorOverview: React.FC<DonorOverviewProps> = ({
             </div>
           ) : (
             <div className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
+              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="rounded-2xl bg-emerald-50 p-4">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Completed</div>
                   <div className="mt-2 text-xl font-black text-emerald-700 sm:text-2xl">{timeline.summary.completed}</div>
@@ -361,8 +391,13 @@ const DonorOverview: React.FC<DonorOverviewProps> = ({
           )}
         </Card>
 
-        <Card className="p-6">
-          <div className="flex justify-between items-center mb-6">
+        <Card className="relative p-6">
+          <InfoPopover
+            className="absolute right-6 top-6"
+            title="Recent Activity"
+            description="This panel shows your latest donation records and quick progress indicators so you can check what was posted recently and how much is still in motion."
+          />
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 pr-12">
             <h3 className="text-base font-bold text-slate-900 sm:text-lg">
               Recent Activity
             </h3>

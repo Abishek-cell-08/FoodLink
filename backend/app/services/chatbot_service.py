@@ -22,6 +22,7 @@ except ImportError:
 
 
 INTENTS = {
+    "GREETING",
     "FIND_FOOD",
     "PICKUP_SUGGEST",
     "FOOD_ESTIMATE",
@@ -31,8 +32,15 @@ INTENTS = {
     "UNKNOWN",
 }
 
+DONATION_DRAFTS = {}
+
 
 def process_message(user, role: str, message: str):
+    role_str = role.value if hasattr(role, "value") else str(role)
+
+    if role_str == "DONOR" and user and _has_active_donation_draft(user):
+        return _continue_donation_draft(user=user, role=role, message=message)
+
     intent_payload = _extract_intent(role=role, message=message)
     intent = intent_payload.get("intent", "UNKNOWN")
     details = intent_payload.get("details", {})
@@ -41,6 +49,7 @@ def process_message(user, role: str, message: str):
         intent = "UNKNOWN"
 
     handler = {
+        "GREETING": _handle_greeting,
         "FIND_FOOD": _handle_find_food,
         "PICKUP_SUGGEST": _handle_pickup_suggest,
         "FOOD_ESTIMATE": _handle_food_estimate,
@@ -51,7 +60,7 @@ def process_message(user, role: str, message: str):
 
     result = handler(user=user, role=role, message=message, details=details)
     result["intent"] = intent
-    result["role"] = role.value if hasattr(role, "value") else str(role)
+    result["role"] = role_str
     result["usedGemini"] = bool(intent_payload.get("used_gemini"))
     return result
 
@@ -64,7 +73,7 @@ def _extract_intent(role: str, message: str):
         "Return ONLY valid JSON. No explanation.\n"
         "Format: {\"intent\": \"...\", \"details\": {}}\n\n"
         "You are an AI assistant for a food donation platform.\n"
-        "Allowed intents: FIND_FOOD, PICKUP_SUGGEST, FOOD_ESTIMATE, "
+        "Allowed intents: GREETING, FIND_FOOD, PICKUP_SUGGEST, FOOD_ESTIMATE, "
         "FOOD_SAFETY, CREATE_DONATION, ANALYTICS, UNKNOWN.\n"
         f"Current role: {role}.\n"
         "Extract useful details like quantity_text, food_type, expiry_hours, people_count.\n"
@@ -156,7 +165,9 @@ def _extract_genai_response_text(response):
 def _fallback_intent_parser(message: str):
     lowered = message.lower()
 
-    if any(word in lowered for word in ["nearby food", "find food", "available now", "donation near", "near me"]):
+    if any(re.search(pattern, lowered) for pattern in [r"\bhi\b", r"\bhello\b", r"\bhey\b", r"\bgood morning\b", r"\bgood evening\b"]):
+        intent = "GREETING"
+    elif any(word in lowered for word in ["nearby food", "find food", "available now", "donation near", "near me"]):
         intent = "FIND_FOOD"
     elif any(word in lowered for word in ["pickup", "best option", "which should i collect", "collect first"]):
         intent = "PICKUP_SUGGEST"
@@ -191,6 +202,55 @@ def _fallback_intent_parser(message: str):
         "intent": intent,
         "details": details,
         "used_gemini": False,
+    }
+
+
+def _handle_greeting(user, role: str, message: str, details: dict):
+    role_str = role.value if hasattr(role, "value") else str(role)
+    user_name = getattr(user, "name", "") or ""
+    first_name = user_name.split(" ")[0] if user_name else ""
+
+    greeting_prefix = f"Hi {first_name}," if first_name else "Hi,"
+
+    if role_str == "DONOR":
+        return {
+            "reply": (
+                f"{greeting_prefix} I can help you post food faster, estimate how many people a quantity can feed, "
+                "or suggest a safe expiry window before you list a donation."
+            ),
+            "data": {},
+            "suggestions": [
+                "Help me post this food",
+                "How much food is enough for 40 people?",
+                "Suggest expiry time for cooked rice",
+            ],
+        }
+
+    if role_str == "NGO":
+        return {
+            "reply": (
+                f"{greeting_prefix} I can help you find the best pickup opportunities, compare urgency versus distance, "
+                "or guide you on whether food should be collected quickly."
+            ),
+            "data": {},
+            "suggestions": [
+                "Find nearby food available now",
+                "Suggest the best pickup options",
+                "Is this food still safe to collect?",
+            ],
+        }
+
+    return {
+        "reply": (
+            f"{greeting_prefix} I can help you review donor and NGO activity, summarize platform performance, "
+            "or answer admin questions in a more conversational way."
+        ),
+        "data": {},
+        "suggestions": [
+            "How much food was saved this week?",
+            "Show me donor activity highlights",
+            "Which area has the highest demand right now?",
+        ],
     }
 
 
@@ -340,27 +400,7 @@ def _handle_create_donation(user, role: str, message: str, details: dict):
     if role_str != "DONOR":
         return _role_restricted_reply("DONOR", "donation posting help")
 
-    quantity_text = details.get("quantity_text") or _extract_quantity_text(message)
-    estimated_meals = _estimate_meals_from_quantity(quantity_text or message)
-    food_type = _extract_food_type(message)
-    suggested_expiry = _suggest_expiry_hours(food_type)
-
-    reply = "I can help the donor post this quickly. I extracted the likely donation details and added a few suggestions."
-    return {
-        "reply": reply,
-        "data": {
-            "draftDonation": {
-                "foodType": food_type,
-                "quantity": quantity_text,
-                "suggestedExpiryHours": suggested_expiry,
-                "estimatedMeals": estimated_meals,
-            }
-        },
-        "suggestions": [
-            "Confirm the pickup address and food quantity before posting",
-            "Mention whether the food is packed, refrigerated, or freshly cooked",
-        ],
-    }
+    return _start_or_update_donation_draft(user=user, message=message, details=details)
 
 
 def _handle_analytics(user, role: str, message: str, details: dict):
@@ -412,18 +452,314 @@ def _handle_analytics(user, role: str, message: str, details: dict):
 
 
 def _handle_unknown(user, role: str, message: str, details: dict):
+    role_str = role.value if hasattr(role, "value") else str(role)
+
+    gemini_reply = _generate_conversational_reply(role=role_str, message=message)
+    if gemini_reply:
+        return {
+            "reply": gemini_reply,
+            "data": {},
+            "suggestions": _role_suggestions(role_str),
+        }
+
+    if role_str == "DONOR":
+        reply = (
+            "I can help in a more practical way here. If you want, I can guide you through posting food, "
+            "estimating servings, or choosing a reasonable expiry window for the donation."
+        )
+    elif role_str == "NGO":
+        reply = (
+            "I can help you compare pickup options, find nearby food, or reason about urgency, travel, and food safety before claiming."
+        )
+    else:
+        reply = (
+            "I can help with admin-style questions like food saved, demand hotspots, donor activity, NGO activity, and fulfillment trends."
+        )
+
     return {
-        "reply": (
-            "I can help with nearby food, pickup suggestions, meal estimation, food safety guidance, "
-            "donation posting help, or admin analytics."
-        ),
+        "reply": reply,
         "data": {},
-        "suggestions": [
-            "NGO: Find nearby food available now",
-            "Donor: Help me post this donation",
-            "Admin: How much food was saved this week?",
-        ],
+        "suggestions": _role_suggestions(role_str),
     }
+
+
+def _has_active_donation_draft(user):
+    return bool(user and DONATION_DRAFTS.get(user.id))
+
+
+def _continue_donation_draft(user, role: str, message: str):
+    lowered = message.strip().lower()
+    if lowered in {"cancel", "stop", "reset", "start over", "cancel posting"}:
+        DONATION_DRAFTS.pop(user.id, None)
+        return {
+            "reply": "Okay, I cleared the donation draft. If you want to start again, just tell me what food you want to post.",
+            "data": {},
+            "suggestions": [
+                "I want to post cooked rice",
+                "Help me post leftover biryani",
+            ],
+        }
+
+    return _start_or_update_donation_draft(user=user, message=message, details={})
+
+
+def _start_or_update_donation_draft(user, message: str, details: dict):
+    draft = DONATION_DRAFTS.get(user.id, _empty_donation_draft(user))
+    extracted = _extract_donation_draft_fields(message=message, user=user, expected_field=draft.get("expectedField"))
+
+    if details.get("food_type") and not extracted.get("foodType"):
+        extracted["foodType"] = details.get("food_type")
+    if details.get("quantity_text") and not extracted.get("quantity"):
+        extracted["quantity"] = details.get("quantity_text")
+    if details.get("expiry_hours") is not None and extracted.get("expiryHours") is None:
+        extracted["expiryHours"] = details.get("expiry_hours")
+
+    for key in ["foodType", "quantity", "expiryHours", "pickupAddress", "notes"]:
+        value = extracted.get(key)
+        if value not in (None, ""):
+            draft[key] = value
+
+    if not draft.get("expiryHours") and draft.get("foodType"):
+        draft["suggestedExpiryHours"] = _suggest_expiry_hours(draft["foodType"])
+
+    missing_fields = _missing_donation_fields(draft)
+    if not missing_fields:
+        donation = Donation(
+            donor_id=user.id,
+            food_type=draft["foodType"],
+            quantity=draft["quantity"],
+            expiry_hours=int(draft["expiryHours"]),
+            pickup_address=draft["pickupAddress"],
+            pickup_lat=user.lat,
+            pickup_lng=user.lng,
+            notes=draft["notes"],
+        )
+
+        db.session.add(donation)
+        db.session.commit()
+        DONATION_DRAFTS.pop(user.id, None)
+
+        estimated_meals = _estimate_meals_from_quantity(draft["quantity"])
+        return {
+            "reply": "Your donation has been posted successfully. It will now appear in your normal donations list just like a manually posted entry.",
+            "data": {
+                "createdDonation": {
+                    **donation.to_dict(),
+                    "pickupAddress": donation.pickup_address,
+                    "notes": donation.notes,
+                    "estimatedMeals": estimated_meals,
+                }
+            },
+            "suggestions": [
+                "Help me estimate servings for another donation",
+                "Suggest expiry time for another food item",
+            ],
+        }
+
+    next_field = missing_fields[0]
+    draft["expectedField"] = next_field
+    DONATION_DRAFTS[user.id] = draft
+    return _build_donation_follow_up_reply(draft, next_field)
+
+
+def _empty_donation_draft(user):
+    return {
+        "foodType": None,
+        "quantity": None,
+        "expiryHours": None,
+        "pickupAddress": None,
+        "notes": None,
+        "expectedField": None,
+        "defaultLocation": getattr(user, "location", None),
+    }
+
+
+def _missing_donation_fields(draft):
+    return [
+        field
+        for field in ["foodType", "quantity", "expiryHours", "pickupAddress", "notes"]
+        if draft.get(field) in (None, "")
+    ]
+
+
+def _extract_donation_draft_fields(message: str, user, expected_field: str | None = None):
+    extracted = _extract_donation_fields_with_gemini(message, user)
+    if extracted is None:
+        extracted = _extract_donation_fields_fallback(message, user, expected_field)
+
+    if extracted.get("notes"):
+        lowered_notes = str(extracted["notes"]).strip().lower()
+        if lowered_notes in {"none", "no", "no notes", "nothing", "n/a", "na"}:
+            extracted["notes"] = "No additional notes provided."
+
+    return extracted
+
+
+def _extract_donation_fields_with_gemini(message: str, user):
+    gemini_api_key = current_app.config.get("GEMINI_API_KEY")
+    gemini_model = "gemini-2.5-flash"
+
+    if not gemini_api_key or genai is None:
+        return None
+
+    system_instruction = (
+        "Return ONLY valid JSON with these keys: "
+        "{\"foodType\": string|null, \"quantity\": string|null, \"expiryHours\": number|null, "
+        "\"pickupAddress\": string|null, \"notes\": string|null}. "
+        "Extract donation posting details from the user's message for a food donation workflow. "
+        "If a field is not clearly present, return null for it. "
+        "If the user says there are no notes, return \"No additional notes provided.\" for notes."
+    )
+
+    try:
+        client = genai.Client(api_key=gemini_api_key)
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=[
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": f"{system_instruction}\n\nSaved user location: {getattr(user, 'location', None)}\n\nUser message: {message}"
+                        }
+                    ]
+                }
+            ],
+            config={"temperature": 0.1}
+        )
+
+        content = getattr(response, "text", None) or _extract_genai_response_text(response)
+        content = (content or "").strip()
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        if not match:
+            return None
+
+        payload = json.loads(match.group())
+        return {
+            "foodType": payload.get("foodType"),
+            "quantity": payload.get("quantity"),
+            "expiryHours": payload.get("expiryHours"),
+            "pickupAddress": payload.get("pickupAddress"),
+            "notes": payload.get("notes"),
+        }
+    except Exception as e:
+        print("GEMINI DONATION EXTRACTION ERROR:", e)
+        return None
+
+
+def _extract_donation_fields_fallback(message: str, user, expected_field: str | None = None):
+    lowered = message.strip().lower()
+    result = {
+        "foodType": _extract_food_type(message),
+        "quantity": _extract_quantity_text(message),
+        "expiryHours": _extract_number_before_keywords(message, ["hour", "hours", "hr", "hrs"]),
+        "pickupAddress": None,
+        "notes": None,
+    }
+
+    if "same as my location" in lowered or "use my location" in lowered or "use my current location" in lowered:
+        result["pickupAddress"] = getattr(user, "location", None)
+
+    address_patterns = [
+        r"(?:pickup address|pickup location|address|location)\s*(?:is|:)?\s*(.+)$",
+        r"(?:collect from|pickup from)\s+(.+)$",
+    ]
+    for pattern in address_patterns:
+        match = re.search(pattern, message, re.IGNORECASE)
+        if match:
+            result["pickupAddress"] = match.group(1).strip(" .")
+            break
+
+    notes_patterns = [
+        r"(?:notes|note|storage|condition)\s*(?:is|:)?\s*(.+)$",
+    ]
+    for pattern in notes_patterns:
+        match = re.search(pattern, message, re.IGNORECASE)
+        if match:
+            result["notes"] = match.group(1).strip(" .")
+            break
+
+    if lowered in {"none", "no notes", "no", "n/a", "na"}:
+        if expected_field == "notes":
+            result["notes"] = "No additional notes provided."
+
+    if expected_field == "foodType" and not result["foodType"] and len(message.split()) <= 8:
+        result["foodType"] = message.strip(" .")
+    elif expected_field == "quantity" and not result["quantity"] and len(message.split()) <= 8:
+        result["quantity"] = message.strip(" .")
+    elif expected_field == "pickupAddress" and not result["pickupAddress"]:
+        result["pickupAddress"] = message.strip(" .")
+    elif expected_field == "notes" and not result["notes"]:
+        result["notes"] = "No additional notes provided." if lowered in {"none", "no notes", "nothing"} else message.strip(" .")
+    elif expected_field == "expiryHours" and result["expiryHours"] is None:
+        plain_number = re.search(r"\b(\d{1,2})\b", lowered)
+        if plain_number:
+            result["expiryHours"] = int(plain_number.group(1))
+
+    return result
+
+
+def _build_donation_follow_up_reply(draft, next_field: str):
+    summary_parts = []
+    if draft.get("foodType"):
+        summary_parts.append(f"food: {draft['foodType']}")
+    if draft.get("quantity"):
+        summary_parts.append(f"quantity: {draft['quantity']}")
+    if draft.get("expiryHours"):
+        summary_parts.append(f"expiry: {draft['expiryHours']} hours")
+    if draft.get("pickupAddress"):
+        summary_parts.append(f"pickup: {draft['pickupAddress']}")
+    if draft.get("notes"):
+        summary_parts.append(f"notes: {draft['notes']}")
+
+    summary_text = ""
+    if summary_parts:
+        summary_text = " I already have " + ", ".join(summary_parts) + "."
+
+    prompts = {
+        "foodType": (
+            "I can post this for you." + summary_text + " What food are you donating?",
+            ["Cooked rice", "Veg biryani", "Bread and bananas"],
+        ),
+        "quantity": (
+            "I’ve noted the food type." + summary_text + " What quantity do you want to post? You can say something like 10 kg, 40 plates, or 5 trays.",
+            ["10 kg", "40 plates", "5 trays"],
+        ),
+        "expiryHours": (
+            "I’ve got the main food details." + summary_text + f" How many hours from now will this food stay good?{_expiry_hint_text(draft)}",
+            ["2 hours", "4 hours", "6 hours"],
+        ),
+        "pickupAddress": (
+            "Almost there." + summary_text + " What pickup address should I use for this donation?",
+            ["Use my current location", "Kitchen Gate 2, MG Road", "Block A cafeteria entrance"],
+        ),
+        "notes": (
+            "One last thing." + summary_text + " Any notes for the NGO, like packed food, refrigeration, allergens, or storage condition? If none, just say no notes.",
+            ["Packed and ready for pickup", "Keep refrigerated", "No notes"],
+        ),
+    }
+
+    reply, suggestions = prompts[next_field]
+    return {
+        "reply": reply,
+        "data": {
+            "draftDonation": {
+                "foodType": draft.get("foodType"),
+                "quantity": draft.get("quantity"),
+                "expiryHours": draft.get("expiryHours"),
+                "pickupAddress": draft.get("pickupAddress"),
+                "notes": draft.get("notes"),
+            }
+        },
+        "suggestions": suggestions,
+    }
+
+
+def _expiry_hint_text(draft):
+    suggested = draft.get("suggestedExpiryHours")
+    if suggested:
+        return f" A reasonable starting point for this food is around {suggested} hours."
+    return ""
 
 
 def _rank_pending_donations_for_ngo(user):
@@ -521,3 +857,69 @@ def _role_restricted_reply(expected_role: str, feature_name: str):
         "data": {},
         "suggestions": [],
     }
+
+
+def _role_suggestions(role_str: str):
+    if role_str == "DONOR":
+        return [
+            "Help me post this donation",
+            "How much food can feed 50 people?",
+            "Suggest expiry time for cooked food",
+        ]
+    if role_str == "NGO":
+        return [
+            "Find nearby food available now",
+            "Suggest the best pickup options",
+            "Compare distance and urgency",
+        ]
+    return [
+        "How much food was saved this week?",
+        "Which area has highest demand?",
+        "Show fulfillment trends",
+    ]
+
+
+def _generate_conversational_reply(role: str, message: str):
+    gemini_api_key = current_app.config.get("GEMINI_API_KEY")
+    gemini_model = "gemini-2.5-flash"
+
+    if not gemini_api_key or genai is None:
+        return None
+
+    system_instruction = (
+        "You are a warm, practical assistant for a food donation platform. "
+        "Reply conversationally in 2 to 4 short sentences. "
+        "Be role-aware and helpful, not robotic. "
+        "Do not mention JSON, intents, fallback systems, or internal tooling. "
+        f"The current user role is {role}. "
+        "For DONOR users, focus on posting food, quantity estimation, expiry windows, and donation readiness. "
+        "For NGO users, focus on pickup prioritization, urgency, distance, food suitability, and coordination. "
+        "For ADMIN users, focus on platform monitoring, donor/NGO activity, and trend analysis. "
+        "If the message is a greeting, respond naturally and suggest what help is available for that role."
+    )
+
+    try:
+        client = genai.Client(api_key=gemini_api_key)
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=[
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": f"{system_instruction}\n\nUser message: {message}"
+                        }
+                    ]
+                }
+            ],
+            config={
+                "temperature": 0.7
+            }
+        )
+
+        content = getattr(response, "text", None) or _extract_genai_response_text(response)
+        content = (content or "").strip()
+        return content or None
+    except Exception as e:
+        print("GEMINI CONVERSATION ERROR:", e)
+        return None

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/client";
-import { Button, Card, StatusBadge } from "../../components/UI";
+import { Button, Card, InfoPopover, StatusBadge } from "../../components/UI";
 
 interface Donation {
   id: number;
@@ -46,8 +46,14 @@ const DonorDashboard: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) =>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-emerald-600 text-white">
-          <div className="text-emerald-100 text-sm font-medium">Active Allocations</div>
+        <Card className="relative p-6 bg-emerald-600 text-white">
+          <InfoPopover
+            className="absolute right-6 top-6"
+            title="Active Allocations"
+            description="This counts donations that are still being worked on, especially items already matched and moving toward pickup."
+            tone="dark"
+          />
+          <div className="pr-10 text-sm font-medium text-emerald-100">Active Allocations</div>
           <div className="mt-1 text-2xl font-bold sm:text-3xl">{activeAllocations}</div>
         </Card>
       </div>

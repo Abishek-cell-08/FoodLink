@@ -8,6 +8,7 @@ import AdminOverview from './components/Admin/AdminOverview';
 import AdminReports from './components/Admin/AdminReports';
 import AdminNGOManagement from './components/Admin/AdminNGOManagement';
 import AdminPriorityIntelligence from './components/Admin/AdminPriorityIntelligence';
+import AdminDonorManagement from './components/Admin/AdminDonorManagement';
 import DonorOverview from './components/Donor/DonorOverview';
 import DonorDonations from './components/Donor/DonorDonations';
 import NGOOverview from './components/NGO/NGOOverview';
@@ -72,6 +73,7 @@ const App: React.FC = () => {
               <AdminOverview
                 onViewReports={() => setCurrentPage('reports')}
                 onManageNGOs={() => setCurrentPage('manage-ngos')}
+                onViewDonors={() => setCurrentPage('manage-donors')}
               />
             ) : user.role === UserRole.DONOR ? (
               <DonorOverview
@@ -120,6 +122,10 @@ const App: React.FC = () => {
 
           {currentPage === 'manage-ngos' && user.role === UserRole.ADMIN && (
             <AdminNGOManagement />
+          )}
+
+          {currentPage === 'manage-donors' && user.role === UserRole.ADMIN && (
+            <AdminDonorManagement />
           )}
 
           {currentPage === 'reports' && user.role === UserRole.ADMIN && (

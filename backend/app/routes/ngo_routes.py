@@ -47,13 +47,35 @@ def browse_food():
     ngo = User.query.get_or_404(ngo_id)
 
     search = request.args.get("search", "")
+    sort = request.args.get("sort", "RANK")
+    page = int(request.args.get("page", 1))
+    per_page = 10
     donations = Donation.query.filter(
         Donation.status == "PENDING",
         Donation.food_type.ilike(f"%{search}%"),
     ).all()
 
-    results = [_serialize_ranked_donation(item) for item in rank_donations_for_ngo(ngo, donations=donations)]
-    return success_response("Food marketplace", results)
+    ranked = rank_donations_for_ngo(ngo, donations=donations)
+
+    if sort == "DISTANCE":
+        ranked.sort(key=lambda item: item["distanceKm"] if item["distanceKm"] is not None else 999999)
+    elif sort == "EXPIRY":
+        ranked.sort(key=lambda item: item["donation"].expiry_datetime())
+    else:
+        ranked.sort(key=lambda item: item["priorityScore"], reverse=True)
+
+    total = len(ranked)
+    start = max(0, (page - 1) * per_page)
+    end = start + per_page
+    paged_items = ranked[start:end]
+
+    results = [_serialize_ranked_donation(item) for item in paged_items]
+    return success_response("Food marketplace", {
+        "items": results,
+        "total": total,
+        "page": page,
+        "perPage": per_page,
+    })
 
 
 @ngo_bp.route("/claim/<int:donation_id>", methods=["POST"])
@@ -100,11 +122,15 @@ def claim_donation(donation_id):
 @role_required("NGO")
 def active_requests():
     ngo_id = int(get_jwt_identity())
+    page = int(request.args.get("page", 1))
+    per_page = 10
 
-    requests = Request.query.filter_by(ngo_id=ngo_id).all()
+    pagination = Request.query.filter_by(ngo_id=ngo_id) \
+        .order_by(Request.id.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
     response = []
 
-    for request_row in requests:
+    for request_row in pagination.items:
         donation = Donation.query.get(request_row.donation_id)
         pickup = Pickup.query.filter_by(request_id=request_row.id).first()
         if donation:
@@ -119,7 +145,12 @@ def active_requests():
                 }
             )
 
-    return success_response("Active requests", response)
+    return success_response("Active requests", {
+        "items": response,
+        "total": pagination.total,
+        "page": page,
+        "perPage": per_page,
+    })
 
 
 @ngo_bp.route("/verify/<int:request_id>", methods=["POST"])

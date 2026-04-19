@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card } from "../UI";
+import { Button, Card, InfoPopover } from "../UI";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 import api from "../../api/client";
 
 interface AdminOverviewProps {
   onViewReports: () => void;
   onManageNGOs: () => void;
+  onViewDonors: () => void;
 }
 
 interface KPI {
   label: string;
   val: string;
   change: string;
+  help?: string;
 }
 
 interface Alert {
@@ -28,6 +30,7 @@ interface TrendPoint {
 const AdminOverview: React.FC<AdminOverviewProps> = ({
   onViewReports,
   onManageNGOs,
+  onViewDonors,
 }) => {
   const [kpis, setKpis] = useState<KPI[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -43,7 +46,21 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
       const res = await api.get("/api/admin/overview");
       const data = res.data?.data || {};
 
-      setKpis(Array.isArray(data.kpis) ? data.kpis : []);
+      setKpis(
+        (Array.isArray(data.kpis) ? data.kpis : []).map((kpi: KPI) => ({
+          ...kpi,
+          help:
+            kpi.label === "Total Donations"
+              ? "The platform-wide number of donations currently visible in this admin overview."
+              : kpi.label === "Active NGOs"
+                ? "The number of NGO accounts actively participating or available for platform operations."
+                : kpi.label === "Pending Allocation"
+                  ? "Donations that still need assignment or operational action before completion."
+                  : kpi.label === "System Status"
+                    ? "A quick health signal showing whether the main platform workflows appear stable."
+                    : "This KPI tracks an important admin-level system metric for monitoring platform performance.",
+        }))
+      );
       setAlerts(Array.isArray(data.alerts) ? data.alerts : []);
       setMiniData(Array.isArray(data.trend) ? data.trend : []);
     } catch (err) {
@@ -95,22 +112,51 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
           </div>
         ) : kpis.length > 0 ? (
           kpis.map((stat, i) => (
-            <Card key={i} className="p-5 border-slate-200">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                {stat.label}
-              </div>
-              <div className="text-xl font-black text-slate-900 sm:text-2xl">
-                {stat.val}
-              </div>
-              <div
-                className={`text-[10px] font-bold mt-2 ${
-                  stat.change?.startsWith("+") || stat.change === "Active"
-                    ? "text-emerald-600"
-                    : "text-slate-500"
+            <Card
+              key={i}
+              className={`relative border-slate-200 p-5 ${
+                stat.label === "Total Donors" || stat.label === "Total NGOs"
+                  ? "cursor-pointer transition-all hover:border-emerald-300 hover:shadow-md"
+                  : ""
+              }`}
+            >
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title={stat.label}
+                description={stat.help ?? "This KPI helps admins understand current platform performance."}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (stat.label === "Total Donors") {
+                    onViewDonors();
+                  }
+                  if (stat.label === "Total NGOs") {
+                    onManageNGOs();
+                  }
+                }}
+                className={`w-full text-left ${
+                  stat.label === "Total Donors" || stat.label === "Total NGOs"
+                    ? "cursor-pointer"
+                    : "cursor-default"
                 }`}
               >
-                {stat.change}
-              </div>
+                <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {stat.label}
+                </div>
+                <div className="text-xl font-black text-slate-900 sm:text-2xl">
+                  {stat.val}
+                </div>
+                <div
+                  className={`mt-2 text-[10px] font-bold ${
+                    stat.change?.startsWith("+") || stat.change === "Active"
+                      ? "text-emerald-600"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {stat.change}
+                </div>
+              </button>
             </Card>
           ))
         ) : (
@@ -120,7 +166,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         {/* Alerts */}
         <div className="lg:col-span-2 space-y-6">
           <h3 className="text-base font-bold text-slate-900 sm:text-lg">
@@ -140,7 +186,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
                   }`}
                 >
                   <div className="flex-1 text-sm font-medium">{alert.msg}</div>
-                  <div className="text-[10px] font-bold opacity-60 uppercase whitespace-nowrap">
+                  <div className="text-[10px] font-bold uppercase opacity-60">
                     {alert.time}
                   </div>
                 </div>
@@ -153,8 +199,13 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
 
         {/* Mini Chart */}
         <div className="space-y-6">
-          <Card className="p-6">
-            <h4 className="text-sm font-bold text-slate-900 mb-4">
+          <Card className="relative p-6">
+            <InfoPopover
+              className="absolute right-6 top-6"
+              title="Fulfillment Trend"
+              description="This mini chart gives a quick visual signal of how donation fulfillment is moving over time, helping admins notice rising or falling operational performance."
+            />
+            <h4 className="mb-4 pr-10 text-sm font-bold text-slate-900">
               Fulfillment Trend
             </h4>
             <div className="h-32 min-h-[128px]">

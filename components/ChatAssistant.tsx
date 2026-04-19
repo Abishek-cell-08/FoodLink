@@ -98,8 +98,8 @@ const renderArraySummary = (items: unknown[]) => {
         <div key={index} className="rounded-2xl border border-emerald-100 bg-white/80 p-3 text-xs text-slate-700">
           {entries.map(([key, value]) => (
             <div key={key} className="flex items-start justify-between gap-3 py-1">
-              <span className="font-semibold text-slate-500">{formatLabel(key)}</span>
-              <span className="max-w-[11rem] text-right">{formatValue(value)}</span>
+              <span className="min-w-0 font-semibold text-slate-500">{formatLabel(key)}</span>
+              <span className="max-w-[11rem] break-words text-right sm:max-w-[13rem]">{formatValue(value)}</span>
             </div>
           ))}
         </div>
@@ -141,8 +141,8 @@ const renderPayload = (payload?: Record<string, unknown>) => {
               <div className="space-y-1 text-xs text-slate-700">
                 {entries.map(([innerKey, innerValue]) => (
                   <div key={innerKey} className="flex items-start justify-between gap-3">
-                    <span className="font-semibold text-slate-500">{formatLabel(innerKey)}</span>
-                    <span className="max-w-[11rem] text-right">{formatValue(innerValue)}</span>
+                    <span className="min-w-0 font-semibold text-slate-500">{formatLabel(innerKey)}</span>
+                    <span className="max-w-[11rem] break-words text-right sm:max-w-[13rem]">{formatValue(innerValue)}</span>
                   </div>
                 ))}
               </div>
@@ -255,7 +255,7 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
           className={`flex flex-col overflow-hidden border border-slate-200 bg-[linear-gradient(180deg,#f8fffb_0%,#eef6ff_100%)] ${
             isEmbedded
               ? "min-h-[calc(100vh-10rem)] rounded-[30px] shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
-              : "fixed bottom-5 right-5 z-40 h-[min(78vh,42rem)] w-[min(calc(100vw-1.5rem),24rem)] rounded-[28px] shadow-[0_24px_80px_rgba(15,23,42,0.22)]"
+              : "fixed bottom-3 right-3 z-40 h-[min(78vh,42rem)] w-[min(calc(100vw-1.5rem),24rem)] rounded-[28px] shadow-[0_24px_80px_rgba(15,23,42,0.22)] sm:bottom-5 sm:right-5"
           }`}
         >
           <div className="border-b border-slate-200 bg-slate-950 px-5 py-4 text-white">
@@ -283,19 +283,13 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
                 className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[88%] rounded-[24px] px-4 py-3 shadow-sm ${
+                  className={`max-w-[92%] rounded-[24px] px-4 py-3 shadow-sm sm:max-w-[88%] ${
                     message.sender === "user"
                       ? "bg-emerald-600 text-white"
                       : "border border-slate-200 bg-white text-slate-800"
                   }`}
                 >
                   <div className="whitespace-pre-wrap text-sm leading-6">{message.text}</div>
-                  {message.meta?.intent && message.sender === "assistant" && (
-                    <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                      <span>{message.meta.intent}</span>
-                      <span>{message.meta.usedGemini ? "Gemini" : "Fallback"}</span>
-                    </div>
-                  )}
                   {message.sender === "assistant" && renderPayload(message.payload)}
                   {message.sender === "assistant" && message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -338,7 +332,7 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
               ))}
             </div>
 
-            <div className="flex items-end gap-3">
+            <div className="flex items-end gap-2 sm:gap-3">
               <textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
@@ -356,7 +350,7 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
                 type="button"
                 onClick={() => submitMessage()}
                 disabled={isSending || !input.trim()}
-                className="rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="rounded-2xl bg-emerald-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 sm:px-4"
               >
                 Send
               </button>

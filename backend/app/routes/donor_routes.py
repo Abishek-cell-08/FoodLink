@@ -226,6 +226,8 @@ def list_donations():
 
     search = request.args.get("search", "")
     status = request.args.get("status", "ALL")
+    sort = request.args.get("sort", "recent")
+    range_param = request.args.get("range", "ALL")
     page = int(request.args.get("page", 1))
     per_page = 10
 
@@ -237,7 +239,17 @@ def list_donations():
     if status != "ALL":
         query = query.filter(Donation.status == status)
 
-    pagination = query.order_by(Donation.created_at.desc()) \
+    if range_param == "7D":
+        query = query.filter(Donation.created_at >= datetime.utcnow() - timedelta(days=7))
+    elif range_param == "30D":
+        query = query.filter(Donation.created_at >= datetime.utcnow() - timedelta(days=30))
+
+    if sort == "old":
+        query = query.order_by(Donation.created_at.asc())
+    else:
+        query = query.order_by(Donation.created_at.desc())
+
+    pagination = query \
         .paginate(page=page, per_page=per_page, error_out=False)
 
     return success_response("Donations fetched", {

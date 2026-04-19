@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/client";
-import { Button, Card } from "../UI";
+import { Button, Card, InfoPopover } from "../UI";
 
 interface NgoOption {
   id: number;
@@ -73,8 +73,10 @@ const scoreLabelMap: Record<string, string> = {
 const AdminPriorityIntelligence: React.FC = () => {
   const [selectedNgoId, setSelectedNgoId] = useState<number | "">("");
   const [payload, setPayload] = useState<PriorityPayload | null>(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const perPage = 5;
 
   const fetchInsights = async (ngoId?: number | "") => {
     try {
@@ -86,6 +88,7 @@ const AdminPriorityIntelligence: React.FC = () => {
       const data = res.data?.data as PriorityPayload;
       setPayload(data);
       setSelectedNgoId(data?.selectedNgo?.id ?? "");
+      setPage(1);
     } catch (err) {
       console.error("Failed to load priority intelligence", err);
       setError("Failed to load priority intelligence");
@@ -101,6 +104,8 @@ const AdminPriorityIntelligence: React.FC = () => {
 
   const selectedNgo = payload?.selectedNgo;
   const topItems = payload?.items ?? [];
+  const totalPages = Math.ceil(topItems.length / perPage);
+  const visibleItems = topItems.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-500 sm:space-y-8">
@@ -118,6 +123,7 @@ const AdminPriorityIntelligence: React.FC = () => {
             onChange={(e) => {
               const value = e.target.value ? Number(e.target.value) : "";
               setSelectedNgoId(value);
+              setPage(1);
               fetchInsights(value);
             }}
           >
@@ -135,26 +141,46 @@ const AdminPriorityIntelligence: React.FC = () => {
 
       {error && <div className="rounded-lg bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-        <Card className="p-5 border-slate-200">
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Active NGO</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="relative p-5 border-slate-200">
+          <InfoPopover
+            className="absolute right-4 top-4"
+            title="Active NGO"
+            description="The currently selected NGO whose ranking recommendations and model context are being audited."
+          />
+          <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Active NGO</div>
           <div className="text-lg font-black text-slate-900">{selectedNgo?.name ?? "-"}</div>
           <div className="mt-2 text-xs text-slate-500">{selectedNgo?.location ?? "No location"}</div>
         </Card>
-        <Card className="p-5 border-slate-200">
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Pending Ranked</div>
+        <Card className="relative p-5 border-slate-200">
+          <InfoPopover
+            className="absolute right-4 top-4"
+            title="Pending Ranked"
+            description="The number of pending donations the engine evaluated for this NGO before producing the ranked list."
+          />
+          <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Pending Ranked</div>
           <div className="text-xl font-black text-slate-900 sm:text-2xl">{payload?.summary.pendingDonations ?? 0}</div>
           <div className="mt-2 text-[10px] font-bold text-slate-500">Top 20 shown</div>
         </Card>
-        <Card className="p-5 border-slate-200">
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Average Final Score</div>
+        <Card className="relative p-5 border-slate-200">
+          <InfoPopover
+            className="absolute right-4 top-4"
+            title="Average Final Score"
+            description="The mean blended ranking score across the evaluated donations. Higher values usually indicate stronger operational fit."
+          />
+          <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Average Final Score</div>
           <div className="text-xl font-black text-slate-900 sm:text-2xl">{payload?.summary.avgFinalScore ?? 0}</div>
           <div className="mt-2 text-[10px] font-bold text-emerald-600">
             {payload?.summary.mlEnabled ? `ML lift ${payload?.summary.avgMlLift ?? 0}` : "Heuristic only"}
           </div>
         </Card>
-        <Card className="p-5 border-slate-200">
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Model Health</div>
+        <Card className="relative p-5 border-slate-200">
+          <InfoPopover
+            className="absolute right-4 top-4"
+            title="Model Health"
+            description="A quick diagnostic for the prediction model. Lower error values generally mean the model is estimating ranking usefulness more reliably."
+          />
+          <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Model Health</div>
           <div className="text-lg font-black text-slate-900">
             {payload?.model?.metrics?.mae != null ? `MAE ${payload.model.metrics.mae}` : "No model"}
           </div>
@@ -172,20 +198,25 @@ const AdminPriorityIntelligence: React.FC = () => {
             <div className="py-20 text-center font-medium text-slate-400">No ranked donations available.</div>
           ) : (
             <div className="space-y-4">
-              {topItems.map((item, index) => (
-                <Card key={item.id} className="border-slate-200 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1">
+              {visibleItems.map((item, index) => (
+                <Card key={item.id} className="relative border-slate-200 p-5">
+                  <InfoPopover
+                    className="absolute right-5 top-5"
+                    title={`${item.foodType} ranking audit`}
+                    description="This audit card explains why a donation appears at its current rank by showing its signals, sub-scores, and final blended recommendation score."
+                  />
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0 flex-1 pr-10 xl:pr-6">
                       <div className="mb-2 flex items-center gap-3">
                         <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-600">
-                          Rank #{index + 1}
+                          Rank #{(page - 1) * perPage + index + 1}
                         </span>
                         <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
                           {item.priorityTier}
                         </span>
                       </div>
-                      <h3 className="text-base font-bold text-slate-900 sm:text-lg">{item.foodType}</h3>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <h3 className="break-words text-base font-bold text-slate-900 sm:text-lg">{item.foodType}</h3>
+                      <p className="mt-1 break-words text-sm text-slate-500">
                         {item.quantity} • {item.donorName} • {item.distanceKm != null ? `${item.distanceKm.toFixed(1)} km` : "Distance unknown"}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -197,7 +228,7 @@ const AdminPriorityIntelligence: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid min-w-0 grid-cols-3 gap-3 sm:min-w-[230px]">
+                    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[230px]">
                       <div className="rounded-xl bg-slate-50 p-3 text-center">
                         <div className="text-[10px] font-bold uppercase text-slate-400">Heuristic</div>
                         <div className="text-lg font-black text-slate-900 sm:text-xl">{item.heuristicScore ?? "-"}</div>
@@ -213,7 +244,7 @@ const AdminPriorityIntelligence: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="mt-5 grid grid-cols-1 gap-4 2xl:grid-cols-2">
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <div className="mb-3 text-sm font-bold text-slate-900">Score Breakdown</div>
                       <div className="space-y-2">
@@ -238,7 +269,7 @@ const AdminPriorityIntelligence: React.FC = () => {
 
                     <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
                       <div className="mb-3 text-sm font-bold text-slate-900">Operational Evidence</div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                         <div>
                           <div className="text-[10px] font-bold uppercase text-slate-400">Time Left</div>
                           <div className="font-bold text-slate-900">{item.explainability.remainingHours} h</div>
@@ -262,20 +293,57 @@ const AdminPriorityIntelligence: React.FC = () => {
                   </div>
                 </Card>
               ))}
+
+              {topItems.length > perPage && (
+                <div className="flex flex-col gap-3 px-1 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-xs font-medium text-slate-500">
+                    Showing {visibleItems.length} of {topItems.length} ranked items
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <div className="space-y-6">
-          <Card className="border-none bg-slate-900 p-6 text-white shadow-xl">
-            <h3 className="mb-3 font-bold">Audit Narrative</h3>
+          <Card className="relative border-none bg-slate-900 p-6 text-white shadow-xl">
+            <InfoPopover
+              className="absolute right-6 top-6"
+              title="Audit Narrative"
+              description="This panel explains how to interpret the comparison between heuristic scoring, ML prediction, and the final blended ranking shown to admins."
+              tone="dark"
+            />
+            <h3 className="mb-3 pr-10 font-bold">Audit Narrative</h3>
             <p className="text-sm text-slate-300">
               This panel compares the heuristic engine and ML predictor before the final blended score is used for NGO suggestions.
             </p>
           </Card>
 
-          <Card className="p-6 border-slate-200">
-            <h3 className="mb-4 font-bold text-slate-900">Model Snapshot</h3>
+          <Card className="relative p-6 border-slate-200">
+            <InfoPopover
+              className="absolute right-6 top-6"
+              title="Model Snapshot"
+              description="A compact technical summary of the current model version and its training or evaluation statistics."
+            />
+            <h3 className="mb-4 pr-10 font-bold text-slate-900">Model Snapshot</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Type</span>

@@ -26,16 +26,22 @@ interface NGORequestsProps {
 
 const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
   const [items, setItems] = useState<NGORequestItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trackingRequestId, setTrackingRequestId] = useState<number | null>(null);
+  const perPage = 10;
 
   const fetchRequests = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/api/ngo/requests");
-      setItems(res.data.data || []);
+      const res = await api.get("/api/ngo/requests", {
+        params: { page },
+      });
+      setItems(res.data.data?.items || []);
+      setTotal(res.data.data?.total || 0);
     } catch (err: any) {
       console.error("Failed to load requests", err);
       setError("Failed to load active requests");
@@ -46,7 +52,9 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [page]);
+
+  const totalPages = Math.ceil(total / perPage);
 
   const openMap = (item: NGORequestItem) => {
     let url = "";
@@ -101,8 +109,8 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
         <div className="space-y-4">
           {items.map((item) => (
             <Card key={item.requestId} className="p-0 overflow-hidden border-slate-200">
-              <div className="grid grid-cols-1 items-center lg:grid-cols-5">
-                <div className="p-6 col-span-2">
+              <div className="grid grid-cols-1 items-center xl:grid-cols-5">
+                <div className="col-span-2 p-6">
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
@@ -113,9 +121,9 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                     >
                       {item.foodType.charAt(0)}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900">{item.foodType}</h4>
-                      <p className="text-xs text-slate-500">
+                    <div className="min-w-0">
+                      <h4 className="break-words font-bold text-slate-900">{item.foodType}</h4>
+                      <p className="break-words text-xs text-slate-500">
                         {item.donorName ?? "Donor"} • {item.location ?? "Location"}
                       </p>
                     </div>
@@ -138,9 +146,9 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 lg:justify-end">
+                <div className="flex flex-col gap-4 p-4 sm:p-6 xl:items-end">
                   <StatusBadge status={item.status} />
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 xl:justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -210,6 +218,32 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                 <p className="text-slate-500 font-medium">
                   No active requests found.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {items.length > 0 && (
+            <div className="flex flex-col gap-3 px-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs font-medium text-slate-500">
+                Showing {items.length} of {total} requests
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((current) => current + 1)}
+                >
+                  Next
+                </Button>
               </div>
             </div>
           )}

@@ -117,6 +117,17 @@ const NgoManageIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
+const DonorManageIcon = ({ active }: { active: boolean }) => (
+  <svg
+    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 9a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
 const ReportsIcon = ({ active }: { active: boolean }) => (
   <svg
     className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
@@ -202,6 +213,11 @@ const MobileTabBar: React.FC<{
       icon: <OverviewIcon active={activePage === 'dashboard'} />,
     },
     {
+      key: 'manage-donors',
+      label: 'Donors',
+      icon: <DonorManageIcon active={activePage === 'manage-donors'} />,
+    },
+    {
       key: 'manage-ngos',
       label: 'NGOs',
       icon: <NgoManageIcon active={activePage === 'manage-ngos'} />,
@@ -232,7 +248,8 @@ const MobileTabBar: React.FC<{
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pb-4 pt-2.5 shadow-[0_-18px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-4">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-1.5 rounded-[24px] bg-slate-950 px-1.5 py-1.5">
+      <div className="mx-auto max-w-md overflow-x-auto pb-1">
+        <div className="flex min-w-max items-center gap-1.5 rounded-[24px] bg-slate-950 px-1.5 py-1.5">
         {items.map((item) => {
           const active = activePage === item.key;
           const isPrimary = item.key === 'add-donation' || item.key === 'scan-qr';
@@ -242,7 +259,7 @@ const MobileTabBar: React.FC<{
               key={item.key}
               type="button"
               onClick={() => onNavigate(item.key)}
-              className={`flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[10px] font-semibold transition-all ${
+              className={`flex min-h-[60px] min-w-[64px] flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[10px] font-semibold transition-all ${
                 isPrimary
                   ? active
                     ? 'bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.35)]'
@@ -257,6 +274,7 @@ const MobileTabBar: React.FC<{
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );
@@ -279,7 +297,7 @@ const DashboardLayout: React.FC<{
     user.role === UserRole.NGO
       ? ['dashboard', 'browse', 'requests', 'scan-qr', 'ai']
       : user.role === UserRole.ADMIN
-        ? ['dashboard', 'manage-ngos', 'reports', 'priority-audit', 'ai']
+        ? ['dashboard', 'manage-donors', 'manage-ngos', 'reports', 'priority-audit', 'ai']
         : ['dashboard', 'my-donations', 'add-donation', 'ai'];
 
   if (useNativeMobileShell) {
@@ -386,6 +404,16 @@ const DashboardLayout: React.FC<{
           )}
           {user.role === UserRole.ADMIN && (
             <>
+              <SidebarItem
+                label="Donor Directory"
+                active={activePage === 'manage-donors'}
+                onClick={() => onNavigate('manage-donors')}
+                icon={
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 9a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
+              />
               <SidebarItem
                 label="NGO Management"
                 active={activePage === 'manage-ngos'}

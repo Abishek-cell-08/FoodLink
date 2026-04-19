@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card } from "../../components/UI";
+import { Button, Card, InfoPopover } from "../../components/UI";
 import api from "../../api/client";
 
 interface DonationItem {
@@ -87,11 +87,16 @@ const NGODashboard: React.FC<NGODashboardProps> = ({ onScanClick }) => {
               key={item.id}
               className="group relative flex h-full flex-col border-slate-200 p-4 transition-all hover:border-emerald-300 hover:shadow-md sm:p-6"
             >
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title={`${item.foodType} candidate`}
+                description="This card summarizes a donation your NGO can act on. It combines distance, time left, quantity, and platform ranking so teams can decide what to claim first."
+              />
               <div className="absolute -right-3 -top-3 rounded-full border bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 shadow-sm">
                 {item.priorityScore}
               </div>
 
-              <div className="mb-4 flex items-start justify-between">
+              <div className="mb-4 flex items-start justify-between gap-3 pr-10">
                 <span className="text-xs font-medium text-slate-400">
                   {item.distanceKm != null ? `${item.distanceKm.toFixed(1)} km away` : "Distance unknown"}
                 </span>
@@ -102,8 +107,8 @@ const NGODashboard: React.FC<NGODashboardProps> = ({ onScanClick }) => {
                 )}
               </div>
 
-              <h3 className="mb-1 text-base font-bold text-slate-900 sm:text-lg">{item.foodType}</h3>
-              <p className="mb-4 text-sm text-slate-600">{item.donorName ?? "Donor"} • {item.location ?? "Location"}</p>
+              <h3 className="mb-1 pr-10 text-base font-bold text-slate-900 sm:text-lg">{item.foodType}</h3>
+              <p className="mb-4 pr-10 text-sm text-slate-600">{item.donorName ?? "Donor"} • {item.location ?? "Location"}</p>
 
               {item.decisionSignals && item.decisionSignals.length > 0 && (
                 <div className="mb-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Card } from "../UI";
+import { Button, Card, InfoPopover } from "../UI";
 import {
   Bar,
   CartesianGrid,
@@ -283,36 +283,61 @@ const AdminReports: React.FC = () => {
         <div className="py-20 text-center font-medium text-red-500">{error}</div>
       ) : (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Card className="border-slate-200 p-5">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Donations</div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="relative border-slate-200 p-5">
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title="Total Donations"
+                description="The number of donations included in the current report filters and date range."
+              />
+              <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Donations</div>
               <div className="text-xl font-black text-slate-900 sm:text-2xl">{summary?.totalDonations ?? 0}</div>
               <div className="mt-2 text-xs text-slate-500 capitalize">
                 {formatGranularityLabel(summary?.granularity)} view
               </div>
             </Card>
-            <Card className="border-slate-200 p-5">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Completed</div>
+            <Card className="relative border-slate-200 p-5">
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title="Completed"
+                description="Donations successfully fulfilled in this report view. This is a core indicator of impact delivered."
+              />
+              <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Completed</div>
               <div className="text-xl font-black text-emerald-600 sm:text-2xl">{summary?.saved ?? 0}</div>
               <div className="mt-2 text-xs text-slate-500">{completionRate}% completion rate</div>
             </Card>
-            <Card className="border-slate-200 p-5">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Awaiting Action</div>
+            <Card className="relative border-slate-200 p-5">
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title="Awaiting Action"
+                description="Donations still pending allocation, confirmation, or pickup. A rising number here usually means operational backlog."
+              />
+              <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Awaiting Action</div>
               <div className="text-xl font-black text-amber-500 sm:text-2xl">{summary?.pending ?? 0}</div>
               <div className="mt-2 text-xs text-slate-500">Pending allocation or pickup</div>
             </Card>
-            <Card className="border-slate-200 p-5">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Peak Window</div>
+            <Card className="relative border-slate-200 p-5">
+              <InfoPopover
+                className="absolute right-4 top-4"
+                title="Peak Window"
+                description="The busiest time bucket in the selected report range, based on total donation volume."
+              />
+              <div className="mb-1 pr-10 text-[10px] font-bold uppercase tracking-widest text-slate-400">Peak Window</div>
               <div className="text-lg font-black text-slate-900">{summary?.peakLabel ?? "-"}</div>
               <div className="mt-2 text-xs text-slate-500">{summary?.peakTotal ?? 0} donations logged</div>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,0.9fr)]">
-            <Card className="overflow-hidden border-slate-200">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,0.9fr)] xl:gap-8">
+            <Card className="relative overflow-hidden border-slate-200">
+              <InfoPopover
+                className="absolute right-6 top-6 z-10"
+                title="Donation Flow Over Time"
+                description="This chart helps admins compare completion, pending backlog, missed donations, and total activity for each reporting period."
+              />
               <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
+                  <div className="pr-12">
                     <h3 className="text-base font-bold text-slate-900 sm:text-lg">Donation Flow Over Time</h3>
                     <p className="mt-1 max-w-2xl text-sm text-slate-500">
                       Stacked bars show completed, pending, and missed donations, while the line tracks total activity for each period.
@@ -393,15 +418,26 @@ const AdminReports: React.FC = () => {
             </Card>
 
             <div className="space-y-6">
-              <Card className="border-none bg-slate-900 p-6 text-white shadow-xl">
-                <h3 className="text-base font-bold sm:text-lg">How to read this</h3>
+              <Card className="relative border-none bg-slate-900 p-6 text-white shadow-xl">
+                <InfoPopover
+                  className="absolute right-6 top-6"
+                  title="How to read this"
+                  description="Use this guide to interpret whether the platform is improving or accumulating delay. More green and less amber usually signals healthier operations."
+                  tone="dark"
+                />
+                <h3 className="pr-10 text-base font-bold sm:text-lg">How to read this</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">
                   A healthy pattern shows taller green sections, a shrinking amber backlog, and a steady completion line. If amber rises while the total line climbs, the team is receiving donations faster than it is resolving them.
                 </p>
               </Card>
 
-              <Card className="border-slate-200 p-6">
-                <h3 className="mb-4 text-base font-bold text-slate-900 sm:text-lg">Status Breakdown</h3>
+              <Card className="relative border-slate-200 p-6">
+                <InfoPopover
+                  className="absolute right-6 top-6"
+                  title="Status Breakdown"
+                  description="These bars convert the current report totals into quick proportions so admins can see where donations are getting resolved or delayed."
+                />
+                <h3 className="mb-4 pr-10 text-base font-bold text-slate-900 sm:text-lg">Status Breakdown</h3>
                 <div className="space-y-4">
                   <div>
                     <div className="mb-1 flex items-center justify-between text-sm">

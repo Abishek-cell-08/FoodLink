@@ -21,9 +21,14 @@ interface DonorDonationsProps {
   onAddClick: () => void;
 }
 
+type SortOrder = "recent" | "old";
+type DateRange = "7D" | "30D" | "ALL";
+
 const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<DonationStatus | "ALL">("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("recent");
+  const [dateRange, setDateRange] = useState<DateRange>("ALL");
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<Donation[]>([]);
   const [total, setTotal] = useState(0);
@@ -78,6 +83,8 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
         params: {
           search,
           status: filter,
+          sort: sortOrder,
+          range: dateRange,
           page,
         },
       });
@@ -94,7 +101,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
   useEffect(() => {
     fetchDonations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filter, page]);
+  }, [search, filter, sortOrder, dateRange, page]);
 
   const totalPages = Math.ceil(total / perPage);
 
@@ -139,6 +146,51 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
               {status.replace("_", " ")}
             </button>
           ))}
+        </div>
+        <div className="flex flex-wrap gap-2 md:ml-auto">
+          <div className="flex rounded-full border border-slate-200 bg-white p-1">
+            {([
+              { value: "recent", label: "Recent" },
+              { value: "old", label: "Old" },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  setPage(1);
+                  setSortOrder(option.value);
+                }}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition-all ${
+                  sortOrder === option.value
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto">
+            {([
+              { value: "7D", label: "7D" },
+              { value: "30D", label: "30D" },
+              { value: "ALL", label: "All Time" },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  setPage(1);
+                  setDateRange(option.value);
+                }}
+                className={`rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] whitespace-nowrap transition-all ${
+                  dateRange === option.value
+                    ? "border-indigo-600 bg-indigo-600 text-white shadow-md"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
 
@@ -188,15 +240,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
                     </div>
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Distance
-                      </div>
-                      <div className="mt-1 font-semibold text-slate-900">
-                        {donation.distanceKm != null ? `${donation.distanceKm} km` : "-"}
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Listed
+                        Date
                       </div>
                       <div className="mt-1 font-medium text-slate-600">
                         {formatPostedTime(donation.createdAt)}
@@ -257,7 +301,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
                   <th className="px-6 py-4 font-bold text-slate-700">Food Type</th>
                   <th className="px-6 py-4 font-bold text-slate-700">Quantity</th>
                   <th className="px-6 py-4 font-bold text-slate-700">Expiry</th>
-                  <th className="px-6 py-4 font-bold text-slate-700">Distance</th>
+                  <th className="px-6 py-4 font-bold text-slate-700">Date</th>
                   <th className="px-6 py-4 font-bold text-slate-700">Status</th>
                   <th className="px-6 py-4 font-bold text-slate-700">Actions</th>
                 </tr>
@@ -308,7 +352,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-500">
-                          {donation.distanceKm != null ? `${donation.distanceKm} km` : "-"}
+                          {formatPostedTime(donation.createdAt)}
                         </td>
                         <td className="px-6 py-4">
                           <StatusBadge status={donation.status} />

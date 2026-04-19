@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Input } from "../../components/UI";
 import { DonationStatus, User } from "../../types";
 import api from "../../api/client";
@@ -29,9 +29,12 @@ interface NGOBrowseProps {
 const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"RANK" | "DISTANCE" | "EXPIRY">("RANK");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [items, setItems] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const perPage = 10;
 
   const parseUTC = (iso: string) => new Date(iso + "Z");
 
@@ -58,9 +61,10 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
     setError(null);
     try {
       const res = await api.get("/api/ngo/browse", {
-        params: { search },
+        params: { search, sort, page },
       });
-      setItems(res.data.data || []);
+      setItems(res.data.data?.items || []);
+      setTotal(res.data.data?.total || 0);
     } catch (err: any) {
       console.error("Failed to load marketplace", err);
       setError("Failed to load marketplace");
@@ -71,30 +75,13 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
 
   useEffect(() => {
     fetchDonations();
-  }, [search]);
-
-  const processedDonations = useMemo(() => {
-    const result = [...items];
-
-    if (sort === "RANK") {
-      result.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0));
-    }
-
-    if (sort === "DISTANCE") {
-      result.sort((a, b) => (a.distanceKm ?? 999999) - (b.distanceKm ?? 999999));
-    }
-
-    if (sort === "EXPIRY") {
-      result.sort((a, b) => getRemainingMs(a.expiresAt) - getRemainingMs(b.expiresAt));
-    }
-
-    return result;
-  }, [items, sort]);
+  }, [search, sort, page]);
 
   const handleClaim = async (id: number) => {
     try {
       await api.post(`/api/ngo/claim/${id}`);
       alert("Donation claimed successfully!");
+      setPage(1);
       fetchDonations();
       onClaim?.();
     } catch (err: any) {
@@ -102,6 +89,8 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
       alert(err.response?.data?.message || "Failed to claim donation");
     }
   };
+
+  const totalPages = Math.ceil(total / perPage);
 
   const openMap = (donation: Donation) => {
     let url = "";
@@ -133,12 +122,18 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
             placeholder="Search food type..."
             className="w-full md:w-64"
             value={search}
-            onChange={(e: any) => setSearch(e.target.value)}
+            onChange={(e: any) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
           />
           <select
             className="min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none"
             value={sort}
-            onChange={(e) => setSort(e.target.value as "RANK" | "DISTANCE" | "EXPIRY")}
+            onChange={(e) => {
+              setPage(1);
+              setSort(e.target.value as "RANK" | "DISTANCE" | "EXPIRY");
+            }}
           >
             <option value="RANK">Sort by AI Rank</option>
             <option value="DISTANCE">Sort by Nearest</option>
@@ -152,8 +147,9 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
       {error && <div className="py-10 text-center font-medium text-red-600">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {processedDonations.map((donation) => {
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {items.map((donation) => {
             const remaining = formatTimeLeft(donation.expiresAt);
             const totalMinutes = Math.floor(getRemainingMs(donation.expiresAt) / 60000);
 
@@ -166,7 +162,7 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
                   {donation.priorityScore ?? "-"}
                 </div>
 
-                <div className="mb-4 flex items-start justify-between">
+                <div className="mb-4 flex items-start justify-between gap-3 pr-9">
                   <span
                     className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
                       totalMinutes <= 120 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
@@ -174,7 +170,7 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
                   >
                     {totalMinutes <= 120 ? "Critical" : "Available"}
                   </span>
-                  <span className="text-xs font-medium text-slate-400">
+                  <span className="break-words text-xs font-medium text-slate-400">
                     {donation.distanceKm != null ? `${donation.distanceKm.toFixed(1)} km away` : "Unknown distance"}
                   </span>
                 </div>
@@ -185,8 +181,8 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
                   </div>
                 )}
 
-                <h3 className="mb-1 text-base font-bold text-slate-900 sm:text-lg">{donation.foodType}</h3>
-                <p className="mb-4 text-xs text-slate-500">{donation.donorName ?? "Donor"} • {donation.location ?? "Location"}</p>
+                <h3 className="mb-1 break-words pr-4 text-base font-bold text-slate-900 sm:text-lg">{donation.foodType}</h3>
+                <p className="mb-4 break-words text-xs text-slate-500">{donation.donorName ?? "Donor"} • {donation.location ?? "Location"}</p>
 
                 {donation.decisionSignals && donation.decisionSignals.length > 0 && (
                   <div className="mb-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
@@ -227,6 +223,33 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
               </Card>
             );
           })}
+          </div>
+
+          {items.length > 0 && (
+            <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs font-medium text-slate-500">
+                Showing {items.length} of {total} entries
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((current) => current + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
