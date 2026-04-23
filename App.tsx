@@ -143,7 +143,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <div className="app-shell flex min-h-screen flex-col text-slate-900">
       {!useNativeMobileShell && (
         <Navbar user={user} onLogout={handleLogout} onNavigate={setCurrentPage} />
       )}
@@ -151,40 +151,51 @@ const App: React.FC = () => {
       <main className="flex-1">{renderContent()}</main>
 
       {!useNativeMobileShell && (
-        <footer className="py-12 bg-white border-t border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-2 space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold">
+        <footer className="section-shell px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+          <div className="glass-surface mx-auto grid max-w-[1440px] grid-cols-1 gap-10 rounded-[36px] px-6 py-8 sm:px-8 lg:grid-cols-4 lg:px-10 lg:py-10">
+            <div className="space-y-5 lg:col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0f172a,#14926f)] text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.5)]">
                   W
                 </div>
-                <span className="text-xl font-bold text-slate-900">
-                  WasteFoodLink
-                </span>
+                <div>
+                  <span className="block text-xl font-black tracking-[-0.03em] text-slate-900">
+                    WasteFoodLink
+                  </span>
+                  <span className="text-sm text-slate-500">
+                    Elegant infrastructure for food rescue
+                  </span>
+                </div>
               </div>
-              <p className="text-sm text-slate-500 max-w-sm">
-                An engineering initiative focused on solving food logistics
-                challenges through technology and community-driven action.
+              <p className="max-w-xl text-sm leading-7 text-slate-500">
+                A cleaner digital layer for coordinating donors, NGOs, and administrators.
+                Designed to reduce friction, surface the right actions, and turn food recovery
+                into a calm, trustworthy workflow.
               </p>
+              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <span className="rounded-full border border-slate-200 bg-white/70 px-4 py-2">Responsive</span>
+                <span className="rounded-full border border-slate-200 bg-white/70 px-4 py-2">Minimal</span>
+                <span className="rounded-full border border-slate-200 bg-white/70 px-4 py-2">Production-ready</span>
+              </div>
             </div>
             <div className="space-y-4">
-              <h4 className="font-bold text-slate-900">Quick Links</h4>
-              <ul className="text-sm text-slate-500 space-y-2">
-                <li><button className="hover:text-emerald-600">Privacy Policy</button></li>
-                <li><button className="hover:text-emerald-600">Terms of Service</button></li>
-                <li><button className="hover:text-emerald-600">SDG Impact Report</button></li>
+              <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">Platform</h4>
+              <ul className="space-y-3 text-sm text-slate-600">
+                <li><button className="transition-colors hover:text-emerald-600">Impact Dashboard</button></li>
+                <li><button className="transition-colors hover:text-emerald-600">Operational Analytics</button></li>
+                <li><button className="transition-colors hover:text-emerald-600">Verification Flow</button></li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="font-bold text-slate-900">Contact</h4>
-              <ul className="text-sm text-slate-500 space-y-2">
+              <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">Support</h4>
+              <ul className="space-y-3 text-sm text-slate-600">
                 <li>support@wastefoodlink.com</li>
                 <li>Help Center</li>
-                <li>API Documentation</li>
+                <li>Admin Console</li>
               </ul>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto px-6 pt-12 text-center text-xs text-slate-400">
+          <div className="mx-auto max-w-[1440px] px-2 pt-5 text-center text-xs text-slate-400">
             © {new Date().getFullYear()} WasteFoodLink. All rights reserved.
           </div>
         </footer>

@@ -17,19 +17,19 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-full border font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.99]';
   
   const variants = {
-    primary: 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500',
-    secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-    outline: 'border border-slate-300 bg-transparent text-slate-700 hover:bg-slate-50 focus:ring-slate-400',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+    primary: 'border-emerald-500 bg-emerald-500 text-white shadow-[0_16px_36px_-18px_rgba(16,185,129,0.9)] hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-[0_22px_48px_-20px_rgba(16,185,129,0.82)] focus:ring-emerald-500/40',
+    secondary: 'border-slate-900 bg-slate-900 text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.65)] hover:-translate-y-0.5 hover:bg-slate-800 focus:ring-slate-900/25',
+    outline: 'border-slate-200 bg-white/82 text-slate-700 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.4)] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white focus:ring-slate-400/30',
+    danger: 'border-red-500 bg-red-500 text-white shadow-[0_16px_36px_-20px_rgba(239,68,68,0.85)] hover:-translate-y-0.5 hover:bg-red-400 focus:ring-red-500/35'
   };
 
   const sizes = {
-    sm: 'min-h-9 px-3 py-2 text-xs sm:text-sm',
-    md: 'min-h-10 px-4 py-2.5 text-sm sm:text-[15px]',
-    lg: 'min-h-11 px-4 py-3 text-sm sm:px-5 sm:text-base'
+    sm: 'min-h-10 px-4 py-2 text-xs sm:text-sm',
+    md: 'min-h-11 px-5 py-2.5 text-sm sm:text-[15px]',
+    lg: 'min-h-12 px-6 py-3 text-sm sm:px-7 sm:text-base'
   };
 
   const width = fullWidth ? 'w-full' : '';
@@ -46,21 +46,21 @@ export const Button: React.FC<ButtonProps> = ({
 
 export const StatusBadge: React.FC<{ status: DonationStatus }> = ({ status }) => {
   const styles = {
-    [DonationStatus.PENDING]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    [DonationStatus.ALLOCATED]: 'bg-blue-100 text-blue-800 border-blue-200',
-    [DonationStatus.PICKED_UP]: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    [DonationStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200',
+    [DonationStatus.PENDING]: 'border-amber-200 bg-amber-50 text-amber-700',
+    [DonationStatus.ALLOCATED]: 'border-sky-200 bg-sky-50 text-sky-700',
+    [DonationStatus.PICKED_UP]: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    [DonationStatus.REJECTED]: 'border-rose-200 bg-rose-50 text-rose-700',
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${styles[status]}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] ${styles[status]}`}>
       {status.replace('_', ' ')}
     </span>
   );
 };
 
 export const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
-  <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl ${className}`}>
+  <div className={`glass-surface overflow-hidden rounded-[28px] border border-white/70 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.22)] ${className}`}>
     {children}
   </div>
 );
@@ -75,7 +75,7 @@ interface InfoPopoverProps {
 export const InfoPopover: React.FC<InfoPopoverProps> = ({
   title,
   description,
-  className = '',
+  className = 'absolute right-4 top-4',
   tone = 'light',
 }) => {
   const [open, setOpen] = useState(false);
@@ -145,13 +145,13 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
         description: 'text-slate-300',
       }
     : {
-        button: 'border-slate-200 bg-white/90 text-slate-500 hover:bg-slate-50 focus:ring-emerald-500/30',
-        panel: 'border-slate-200 bg-white text-slate-900 shadow-xl',
+        button: 'border-slate-200 bg-white/90 text-slate-500 shadow-sm hover:bg-slate-50 focus:ring-emerald-500/30',
+        panel: 'border-slate-200 bg-white/95 text-slate-900 shadow-xl backdrop-blur-xl',
         description: 'text-slate-500',
       };
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={className}>
       <button
         ref={buttonRef}
         type="button"
@@ -160,7 +160,7 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
         aria-expanded={open}
         aria-controls={popoverId}
         onClick={() => setOpen((current) => !current)}
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-sm font-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${toneClasses.button}`}
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-sm font-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${toneClasses.button}`}
       >
         i
       </button>
@@ -193,10 +193,10 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
 };
 
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, className = '', ...props }) => (
-  <div className="flex flex-col gap-1.5 w-full">
-    {label && <label className="text-sm font-medium text-slate-700">{label}</label>}
+  <div className="flex w-full flex-col gap-2">
+    {label && <label className="text-sm font-semibold text-slate-700">{label}</label>}
     <input 
-      className={`min-h-11 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:px-4 ${className}`}
+      className={`min-h-12 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-emerald-200 focus:bg-white focus:ring-4 focus:ring-emerald-500/12 sm:px-4 ${className}`}
       {...props}
     />
   </div>

@@ -18,10 +18,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 }) => (
   <button
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition-all ${
+    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm transition-all duration-300 ${
       active
-        ? 'bg-emerald-50 text-emerald-700 font-semibold'
-        : 'text-slate-600 hover:bg-slate-100'
+        ? 'bg-white text-emerald-700 font-semibold shadow-[0_16px_32px_-24px_rgba(16,185,129,0.9)] ring-1 ring-emerald-100'
+        : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
     }`}
   >
     {icon}
@@ -342,8 +342,21 @@ const DashboardLayout: React.FC<{
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
-        <aside className="hidden lg:flex flex-col w-64 shrink-0 gap-2">
+      <div className="section-shell mx-auto flex w-full max-w-[1480px] gap-6 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+        <aside className="glass-surface sticky top-[108px] hidden h-[calc(100vh-140px)] w-[300px] shrink-0 flex-col overflow-hidden rounded-[32px] p-4 lg:flex">
+          <div className="rounded-[24px] bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(18,85,70,0.94))] p-5 text-white">
+            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-200">
+              {user.role} workspace
+            </div>
+            <div className="mt-3 text-2xl font-black tracking-[-0.04em]">
+              {user.name}
+            </div>
+            <div className="mt-2 text-sm leading-6 text-slate-300">
+              Focused, full-width operations with a cleaner navigation layer.
+            </div>
+          </div>
+
+          <div className="mt-4 flex-1 space-y-2 overflow-y-auto pr-1">
           <SidebarItem
             label="Overview"
             active={activePage === 'dashboard'}
@@ -446,9 +459,28 @@ const DashboardLayout: React.FC<{
               />
             </>
           )}
+          </div>
+
+          <div className="mt-4 rounded-[24px] border border-white/70 bg-white/70 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              Session
+            </div>
+            <div className="mt-2 text-sm font-semibold text-slate-900">
+              Signed in as {user.role.toLowerCase()}
+            </div>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950"
+            >
+              Logout
+            </button>
+          </div>
         </aside>
 
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="min-w-0 flex-1">
+          <div className="page-fade min-h-[calc(100vh-160px)]">{children}</div>
+        </main>
       </div>
 
       <ChatAssistant user={user} />

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { DonationStatus } from "../../types";
-import { Button, Card, StatusBadge } from "../../components/UI";
-import api from "../../api/client";
-import LivePickupTracker from "../Tracking/LivePickupTracker";
-import { openExternalUrl } from "../../utils/platform";
+import React, { useEffect, useState } from 'react';
+import { DonationStatus } from '../../types';
+import { Button, Card, StatusBadge } from '../../components/UI';
+import api from '../../api/client';
+import LivePickupTracker from '../Tracking/LivePickupTracker';
+import { openExternalUrl } from '../../utils/platform';
 
 interface NGORequestItem {
   requestId: number;
@@ -37,14 +37,14 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/api/ngo/requests", {
+      const res = await api.get('/api/ngo/requests', {
         params: { page },
       });
       setItems(res.data.data?.items || []);
       setTotal(res.data.data?.total || 0);
     } catch (err: any) {
-      console.error("Failed to load requests", err);
-      setError("Failed to load active requests");
+      console.error('Failed to load requests', err);
+      setError('Failed to load active requests');
     } finally {
       setLoading(false);
     }
@@ -57,14 +57,14 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
   const totalPages = Math.ceil(total / perPage);
 
   const openMap = (item: NGORequestItem) => {
-    let url = "";
+    let url = '';
 
     if (item.pickupLat != null && item.pickupLng != null) {
       url = `https://www.openstreetmap.org/?mlat=${item.pickupLat}&mlon=${item.pickupLng}#map=16/${item.pickupLat}/${item.pickupLng}`;
     } else if (item.location) {
       url = `https://www.openstreetmap.org/search?query=${encodeURIComponent(item.location)}`;
     } else {
-      alert("Location not available for this donation");
+      alert('Location not available for this donation');
       return;
     }
 
@@ -72,82 +72,104 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Active Requests</h2>
-          <p className="text-slate-500 text-sm">
-            Track claimed donations and verify pickups
-          </p>
+    <div className="page-fade space-y-8">
+      <div className="glass-surface rounded-[32px] p-6 sm:p-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="premium-kicker">NGO requests</div>
+            <h2 className="section-title mt-5 text-3xl font-black text-slate-950 sm:text-4xl">
+              Pickup coordination, designed for clarity
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+              Track active claims, open pickup locations, launch verification, and follow live
+              movement from a wider, more operationally focused workspace.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <div className="rounded-[24px] border border-white/70 bg-white/70 px-5 py-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Active items</div>
+              <div className="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{total}</div>
+            </div>
+            <Button variant="secondary" size="lg" onClick={onScan}>
+              <svg
+                className="mr-1 h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+              Scan QR Code
+            </Button>
+          </div>
         </div>
-        <Button variant="secondary" onClick={onScan}>
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-          </svg>
-          Scan QR Code
-        </Button>
       </div>
 
       {loading && (
-        <div className="py-20 text-center text-slate-400 font-medium">
+        <Card className="rounded-[32px] p-10 text-center text-slate-400">
           Loading active requests...
-        </div>
+        </Card>
       )}
 
       {error && (
-        <div className="py-10 text-center text-red-600 font-medium">
+        <Card className="rounded-[32px] border border-rose-100 bg-rose-50 p-8 text-center text-rose-700">
           {error}
-        </div>
+        </Card>
       )}
 
       {!loading && !error && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {items.map((item) => (
-            <Card key={item.requestId} className="p-0 overflow-hidden border-slate-200">
-              <div className="grid grid-cols-1 items-center xl:grid-cols-5">
-                <div className="col-span-2 p-6">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                        item.status === DonationStatus.PICKED_UP
-                          ? "bg-emerald-100 text-emerald-600"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      {item.foodType.charAt(0)}
+            <Card key={item.requestId} className="rounded-[32px] p-5 sm:p-6">
+              <div className="grid gap-5 xl:grid-cols-[1.45fr_0.8fr_0.8fr_1fr] xl:items-center">
+                <div className="flex min-w-0 items-start gap-4">
+                  <div
+                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] text-lg font-black ${
+                      item.status === DonationStatus.PICKED_UP
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-sky-50 text-sky-700'
+                    }`}
+                  >
+                    {item.foodType.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h4 className="truncate text-lg font-black tracking-[-0.03em] text-slate-950">
+                        {item.foodType}
+                      </h4>
+                      <StatusBadge status={item.status} />
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="break-words font-bold text-slate-900">{item.foodType}</h4>
-                      <p className="break-words text-xs text-slate-500">
-                        {item.donorName ?? "Donor"} • {item.location ?? "Location"}
-                      </p>
+                    <p className="mt-2 break-words text-sm leading-6 text-slate-500">
+                      {item.donorName ?? 'Donor'} • {item.location ?? 'Location unavailable'}
+                    </p>
+                    <div className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Request ID {item.requestId}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 bg-slate-50/50 h-full flex flex-col justify-center">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+                <div className="rounded-[24px] bg-slate-50/90 p-4">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
                     Quantity
                   </div>
-                  <div className="text-sm font-bold text-slate-900">{item.quantity}</div>
-                </div>
-
-                <div className="p-6 bg-slate-50/50 h-full flex flex-col justify-center">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                    Pickup Window
-                  </div>
-                  <div className="text-sm font-bold text-slate-900">
-                    {item.expiryWindow ?? "-"}
+                  <div className="mt-3 text-lg font-black tracking-[-0.03em] text-slate-950">
+                    {item.quantity}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4 p-4 sm:p-6 xl:items-end">
-                  <StatusBadge status={item.status} />
+                <div className="rounded-[24px] bg-slate-50/90 p-4">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                    Pickup window
+                  </div>
+                  <div className="mt-3 text-lg font-black tracking-[-0.03em] text-slate-950">
+                    {item.expiryWindow ?? '-'}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-start gap-3 xl:items-end">
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    {item.status === DonationStatus.ALLOCATED ? 'Pending fulfillment' : 'Successfully redistributed'}
+                  </div>
                   <div className="flex flex-wrap gap-2 xl:justify-end">
                     <Button
                       variant="outline"
@@ -179,34 +201,14 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                   </div>
                 </div>
               </div>
-
-              <div className="px-6 py-2 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      item.status === DonationStatus.PICKED_UP
-                        ? "bg-emerald-500"
-                        : "bg-blue-500"
-                    }`}
-                  />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                    {item.status === DonationStatus.ALLOCATED
-                      ? "Pending Fulfillment"
-                      : "Successfully Redistributed"}
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium">
-                  Request ID: {item.requestId}
-                </span>
-              </div>
             </Card>
           ))}
 
           {items.length === 0 && (
-            <div className="py-20 text-center space-y-4">
-              <div className="w-16 h-16 bg-slate-100 rounded-full mx-auto flex items-center justify-center text-slate-300">
+            <Card className="rounded-[32px] p-12 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-300">
                 <svg
-                  className="w-8 h-8"
+                  className="h-8 w-8"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -214,17 +216,18 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
-                <p className="text-slate-500 font-medium">
-                  No active requests found.
-                </p>
-              </div>
-            </div>
+              <p className="mt-5 text-base font-semibold text-slate-600">
+                No active requests found.
+              </p>
+              <p className="mt-2 text-sm text-slate-400">
+                Claimed donations will appear here once your NGO starts pickup coordination.
+              </p>
+            </Card>
           )}
 
           {items.length > 0 && (
-            <div className="flex flex-col gap-3 px-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-xs font-medium text-slate-500">
+            <div className="glass-surface flex flex-col gap-4 rounded-[28px] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm font-medium text-slate-500">
                 Showing {items.length} of {total} requests
               </div>
               <div className="flex gap-2">
@@ -251,7 +254,7 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
       )}
 
       {trackingRequestId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-md">
           <LivePickupTracker
             role="NGO"
             requestId={trackingRequestId}

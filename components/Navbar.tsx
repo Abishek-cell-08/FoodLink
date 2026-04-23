@@ -10,60 +10,69 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate }) => {
+  const navLinks = user
+    ? [
+        { key: 'dashboard', label: 'Dashboard' },
+        ...(user.role === UserRole.DONOR ? [{ key: 'add-donation', label: 'Donate' }] : []),
+        ...(user.role === UserRole.NGO ? [{ key: 'scan-qr', label: 'Verify' }] : []),
+      ]
+    : [
+        { key: 'landing', label: 'Home' },
+        { key: 'login', label: 'Access' },
+      ];
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 backdrop-blur-md bg-white/90">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="section-shell sticky top-0 z-50 w-full px-4 pt-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px]">
+        <div className="glass-surface flex h-[76px] items-center justify-between rounded-[28px] px-4 sm:px-6 lg:px-8">
           <div
-            className="flex items-center gap-3 cursor-pointer"
+            className="flex cursor-pointer items-center gap-3"
             onClick={() => onNavigate('landing')}
           >
             <img
               src={appLogo}
               alt="WasteFoodLink"
-              className="h-12 w-auto object-contain sm:h-14"
+              className="h-11 w-auto object-contain sm:h-12"
             />
+            <div className="hidden md:block">
+              <div className="text-sm font-black tracking-[-0.03em] text-slate-950">
+                WasteFoodLink
+              </div>
+              <div className="text-xs font-medium text-slate-500">
+                Premium food rescue network
+              </div>
+            </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden items-center gap-2 md:flex">
+            {navLinks.map((link) => (
+              <button
+                key={link.key}
+                onClick={() => onNavigate(link.key)}
+                className="group relative rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950"
+              >
+                {link.label}
+                <span className="absolute inset-x-4 bottom-1 h-px origin-left scale-x-0 bg-slate-900 transition-transform duration-300 group-hover:scale-x-100" />
+              </button>
+            ))}
+          </div>
+
+          <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <button
-                  onClick={() => onNavigate('dashboard')}
-                  className="text-slate-600 hover:text-emerald-600 font-medium text-sm transition-colors"
-                >
-                  Dashboard
-                </button>
-
-                {user.role === UserRole.DONOR && (
-                  <button
-                    onClick={() => onNavigate('add-donation')}
-                    className="text-slate-600 hover:text-emerald-600 font-medium text-sm transition-colors"
-                  >
-                    Donate Food
-                  </button>
-                )}
-
-                {user.role === UserRole.NGO && (
-                  <button
-                    onClick={() => onNavigate('scan-qr')}
-                    className="text-slate-600 hover:text-emerald-600 font-medium text-sm transition-colors"
-                  >
-                    Scan QR
-                  </button>
-                )}
-
-                <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
-                  <div className="flex flex-col items-end">
+                <div className="flex items-center gap-4 rounded-full border border-white/80 bg-white/60 px-2 py-2 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.45)]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a,#1f7a64)] text-sm font-bold text-white">
+                    {user.name.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
                     <span className="text-sm font-semibold text-slate-900">
                       {user.name}
                     </span>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
                       {user.role}
                     </span>
                   </div>
-
-                  <Button variant="outline" size="sm" onClick={onLogout}>
+                  <Button variant="outline" size="sm" onClick={onLogout} className="ml-2">
                     Logout
                   </Button>
                 </div>
@@ -78,6 +87,12 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate }) => {
                 </Button>
               </div>
             )}
+          </div>
+
+          <div className="md:hidden">
+            <Button variant={user ? 'outline' : 'primary'} size="sm" onClick={() => onNavigate(user ? 'dashboard' : 'login')}>
+              {user ? 'Open App' : 'Start'}
+            </Button>
           </div>
         </div>
       </div>

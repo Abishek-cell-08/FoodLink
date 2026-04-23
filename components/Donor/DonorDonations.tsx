@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import api from "../../api/client";
 import { Button, Card, Input, StatusBadge } from "../UI";
 import { DonationStatus } from "../../types";
@@ -104,6 +105,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
   }, [search, filter, sortOrder, dateRange, page]);
 
   const totalPages = Math.ceil(total / perPage);
+  const modalRoot = typeof document !== "undefined" ? document.body : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -436,32 +438,35 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
         </div>
       </div>
 
-      {showDetailsId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {showDetailsId && modalRoot && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-md">
           <DonorDonationDetails
             donationId={showDetailsId}
             onClose={() => setShowDetailsId(null)}
           />
-        </div>
+        </div>,
+        modalRoot
       )}
 
-      {showQrId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {showQrId && modalRoot && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-md">
           <DonorDonationQR
             donationId={showQrId}
             onClose={() => setShowQrId(null)}
           />
-        </div>
+        </div>,
+        modalRoot
       )}
 
-      {showTrackingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {showTrackingId && modalRoot && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-md">
           <LivePickupTracker
             role="DONOR"
             donationId={showTrackingId}
             onClose={() => setShowTrackingId(null)}
           />
-        </div>
+        </div>,
+        modalRoot
       )}
     </div>
   );
