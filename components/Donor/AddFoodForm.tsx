@@ -121,7 +121,7 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
             Dietary Information & Storage
           </label>
           <textarea
-            className="min-h-[100px] w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:px-4"
+            className="min-h-[100px] w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:px-4"
             placeholder="Allergens, refrigeration needs, etc."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -136,7 +136,7 @@ const AddFoodForm: React.FC<AddFoodFormProps> = ({ onCancel }) => {
           <Button className="flex-1" type="submit" disabled={loading}>
             {loading ? "Posting..." : "Post Donation"}
           </Button>
-          <Button variant="outline" type="button" onClick={onCancel}>
+          <Button variant="outline" className="w-full sm:w-auto" type="button" onClick={onCancel}>
             Cancel
           </Button>
         </div>

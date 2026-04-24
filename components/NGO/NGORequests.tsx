@@ -72,8 +72,8 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
   };
 
   return (
-    <div className="page-fade space-y-8">
-      <div className="glass-surface rounded-[32px] p-6 sm:p-8">
+    <div className="mobile-page page-fade space-y-8">
+      <div className="glass-surface rounded-[28px] p-5 sm:rounded-[32px] sm:p-8">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <div className="premium-kicker">NGO requests</div>
@@ -85,12 +85,12 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
               movement from a wider, more operationally focused workspace.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
             <div className="rounded-[24px] border border-white/70 bg-white/70 px-5 py-4">
               <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Active items</div>
               <div className="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{total}</div>
             </div>
-            <Button variant="secondary" size="lg" onClick={onScan}>
+            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={onScan}>
               <svg
                 className="mr-1 h-4 w-4"
                 fill="none"
@@ -226,7 +226,7 @@ const NGORequests: React.FC<NGORequestsProps> = ({ onScan }) => {
           )}
 
           {items.length > 0 && (
-            <div className="glass-surface flex flex-col gap-4 rounded-[28px] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="glass-surface mobile-pagination flex flex-col gap-4 rounded-[28px] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm font-medium text-slate-500">
                 Showing {items.length} of {total} requests
               </div>

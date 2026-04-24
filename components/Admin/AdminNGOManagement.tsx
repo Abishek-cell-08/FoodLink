@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Input } from "../UI";
 import api from "../../api/client";
+import { isNativeAppShell } from "../../utils/platform";
 
 interface NGO {
   id: number;
@@ -48,6 +49,8 @@ const AdminNGOManagement: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, status]);
 
+  const useMobileCards = isNativeAppShell();
+
   const handleVerify = async (id: number) => {
     try {
       await api.post(`/api/admin/ngos/${id}/verify`);
@@ -77,15 +80,15 @@ const AdminNGOManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mobile-page space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="mobile-section-head flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Partner Governance</h2>
           <p className="text-slate-500 text-sm">
             Verify and audit NGO performance across the network
           </p>
         </div>
-        <Button size="sm">+ Onboard NGO</Button>
+        <Button size="sm" className="w-full sm:w-auto">+ Onboard NGO</Button>
       </div>
 
       {error && (
@@ -94,10 +97,10 @@ const AdminNGOManagement: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:gap-8">
         {/* NGO List */}
         <Card className="lg:col-span-3 overflow-hidden border-slate-200">
-          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
+          <div className="mobile-toolbar flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
             <Input
               placeholder="Search NGOs by name or area..."
               className="text-xs"
@@ -105,7 +108,7 @@ const AdminNGOManagement: React.FC = () => {
               onChange={(e: any) => setSearch(e.target.value)}
             />
             <select
-              className="min-h-10 rounded-xl border border-slate-300 px-3 text-xs font-bold outline-none"
+              className="mobile-select min-h-10 rounded-xl border border-slate-300 px-3 text-xs font-bold outline-none"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -115,71 +118,134 @@ const AdminNGOManagement: React.FC = () => {
             </select>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-4 font-bold text-slate-700">NGO Name</th>
-                  <th className="px-6 py-4 font-bold text-slate-700">Area</th>
-                  <th className="px-6 py-4 font-bold text-slate-700">Fulfillment</th>
-                  <th className="px-6 py-4 font-bold text-slate-700">Status</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? (
+          {useMobileCards ? (
+            <div className="mobile-list p-4">
+              {loading ? (
+                <div className="py-10 text-center text-slate-400">Loading...</div>
+              ) : ngos.length > 0 ? (
+                ngos.map((ngo) => (
+                  <div
+                    key={ngo.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedNGO(ngo)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedNGO(ngo);
+                      }
+                    }}
+                    className={`mobile-data-card w-full border text-left transition-all ${
+                      selectedNGO?.id === ngo.id
+                        ? "rounded-2xl border-emerald-200 bg-emerald-50/40"
+                        : "rounded-2xl border-slate-200 bg-white hover:border-emerald-200"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-base font-bold text-slate-900">{ngo.name}</div>
+                        <div className="mt-1 text-sm text-slate-500">{ngo.area}</div>
+                      </div>
+                      <span
+                        className={`mobile-status-badge ${
+                          ngo.status === "VERIFIED"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {ngo.status}
+                      </span>
+                    </div>
+
+                    <div className="mobile-data-meta">
+                      <div>
+                        <div className="mobile-data-label">Fulfillment</div>
+                        <div className="mobile-data-value">{ngo.rate}</div>
+                      </div>
+                      <div>
+                        <div className="mobile-data-label">Capacity</div>
+                        <div className="mobile-data-value">{ngo.capacity}</div>
+                      </div>
+                    </div>
+
+                    <div className="mobile-actions-row">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Audit
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center text-slate-400">No NGOs found.</div>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                      Loading...
-                    </td>
+                    <th className="px-6 py-4 font-bold text-slate-700">NGO Name</th>
+                    <th className="px-6 py-4 font-bold text-slate-700">Area</th>
+                    <th className="px-6 py-4 font-bold text-slate-700">Fulfillment</th>
+                    <th className="px-6 py-4 font-bold text-slate-700">Status</th>
+                    <th className="px-6 py-4 font-bold text-slate-700 text-right">Actions</th>
                   </tr>
-                ) : ngos.length > 0 ? (
-                  ngos.map((ngo) => (
-                    <tr
-                      key={ngo.id}
-                      onClick={() => setSelectedNGO(ngo)}
-                      className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${
-                        selectedNGO?.id === ngo.id ? "bg-emerald-50/30" : ""
-                      }`}
-                    >
-                      <td className="px-6 py-4 font-semibold text-slate-900">
-                        {ngo.name}
-                      </td>
-                      <td className="px-6 py-4 text-slate-500">{ngo.area}</td>
-                      <td className="px-6 py-4 font-bold text-slate-900">{ngo.rate}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                            ngo.status === "VERIFIED"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {ngo.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Button variant="outline" size="sm">
-                          Audit
-                        </Button>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                        Loading...
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                      No NGOs found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : ngos.length > 0 ? (
+                    ngos.map((ngo) => (
+                      <tr
+                        key={ngo.id}
+                        onClick={() => setSelectedNGO(ngo)}
+                        className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${
+                          selectedNGO?.id === ngo.id ? "bg-emerald-50/30" : ""
+                        }`}
+                      >
+                        <td className="px-6 py-4 font-semibold text-slate-900">
+                          {ngo.name}
+                        </td>
+                        <td className="px-6 py-4 text-slate-500">{ngo.area}</td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{ngo.rate}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              ngo.status === "VERIFIED"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {ngo.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button variant="outline" size="sm">
+                            Audit
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                        No NGOs found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Details Panel */}
         <div className="space-y-4">
-          <Card className="min-h-[320px] border-slate-200 p-5 sm:min-h-[400px] sm:p-6">
+          <Card className="min-h-[280px] border-slate-200 p-5 sm:min-h-[400px] sm:p-6">
             {selectedNGO ? (
               <div className="space-y-6">
                 <div>
@@ -208,7 +274,7 @@ const AdminNGOManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-6 space-y-2">
+                <div className="mobile-actions-row pt-6 space-y-2">
                   {selectedNGO.status === "PENDING" ? (
                     <Button fullWidth onClick={() => handleVerify(selectedNGO.id)}>
                       Verify Now

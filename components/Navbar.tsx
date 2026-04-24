@@ -22,17 +22,17 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate }) => {
       ];
 
   return (
-    <nav className="section-shell sticky top-0 z-50 w-full px-4 pt-4 sm:px-6 lg:px-8">
+    <nav className="section-shell sticky top-0 z-50 w-full px-3 pt-3 sm:px-6 sm:pt-4 lg:px-8">
       <div className="mx-auto max-w-[1440px]">
-        <div className="glass-surface flex h-[76px] items-center justify-between rounded-[28px] px-4 sm:px-6 lg:px-8">
+        <div className="glass-surface flex h-[68px] items-center justify-between rounded-[24px] px-3.5 sm:h-[76px] sm:rounded-[28px] sm:px-6 lg:px-8">
           <div
-            className="flex cursor-pointer items-center gap-3"
+            className="flex min-w-0 cursor-pointer items-center gap-2.5 sm:gap-3"
             onClick={() => onNavigate('landing')}
           >
             <img
               src={appLogo}
               alt="WasteFoodLink"
-              className="h-11 w-auto object-contain sm:h-12"
+              className="h-9 w-auto object-contain sm:h-12"
             />
             <div className="hidden md:block">
               <div className="text-sm font-black tracking-[-0.03em] text-slate-950">
@@ -90,7 +90,12 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, onNavigate }) => {
           </div>
 
           <div className="md:hidden">
-            <Button variant={user ? 'outline' : 'primary'} size="sm" onClick={() => onNavigate(user ? 'dashboard' : 'login')}>
+            <Button
+              variant={user ? 'outline' : 'primary'}
+              size="sm"
+              onClick={() => onNavigate(user ? 'dashboard' : 'login')}
+              className={`min-h-11 px-5 text-sm ${user ? '' : 'bg-emerald-500 hover:bg-emerald-400'}`}
+            >
               {user ? 'Open App' : 'Start'}
             </Button>
           </div>

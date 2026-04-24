@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 import api from "../../api/client";
 import { Button, Card } from "../UI";
-import { appStorage, getApiBaseUrl, getGeolocation, openExternalUrl } from "../../utils/platform";
+import { appStorage, getApiBaseUrl, getGeolocation, isNativeAppShell, openExternalUrl } from "../../utils/platform";
 
 type TrackingRole = "NGO" | "DONOR";
 type SocketStatus = "connecting" | "joined" | "disconnected";
@@ -58,6 +58,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
   const [socketError, setSocketError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const useMobileShell = isNativeAppShell();
 
   const fetchUrl = role === "NGO" ? `/api/ngo/tracking/${requestId}` : `/api/donor/donations/${donationId}/tracking`;
   const updateUrl =
@@ -314,7 +315,13 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
           : "Awaiting live updates";
 
   return (
-    <Card className="max-h-[94vh] w-full max-w-6xl overflow-y-auto border-none bg-white p-0 shadow-2xl">
+    <Card
+      className={`w-full overflow-y-auto border-none bg-white p-0 shadow-2xl ${
+        useMobileShell
+          ? "max-h-[96svh] max-w-[430px] rounded-[18px]"
+          : "max-h-[94vh] max-w-6xl"
+      }`}
+    >
       <style>{`
         .tracker-map .leaflet-container {
           height: 100%;
@@ -350,11 +357,11 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
               <StatusChip label={session?.quantity ?? "-"} tone="indigo" />
             </div>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className={`flex gap-2 ${useMobileShell ? "flex-col" : "flex-col sm:flex-row"}`}>
             {openStreetMapUrl && (
               <Button
                 variant="outline"
-                className="border-slate-200 bg-white/90 shadow-sm backdrop-blur"
+                className={`border-slate-200 bg-white/90 shadow-sm backdrop-blur ${useMobileShell ? "w-full" : ""}`}
                 onClick={() => openExternalUrl(openStreetMapUrl)}
               >
                 Open Map
@@ -362,7 +369,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
             )}
             <Button
               variant="outline"
-              className="border-white/80 bg-white/90 shadow-sm backdrop-blur"
+              className={`border-white/80 bg-white/90 shadow-sm backdrop-blur ${useMobileShell ? "w-full" : ""}`}
               onClick={() => {
                 stopSharing();
                 onClose();
@@ -380,7 +387,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
         <div className="m-6 rounded-lg bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>
       ) : session ? (
         <div className="space-y-6 p-4 sm:p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`grid gap-4 ${useMobileShell ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"}`}>
             <MetricCard
               label="Tracking Status"
               value={session.trackingStatus}
@@ -420,7 +427,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
           {socketError && <div className="rounded-lg bg-slate-100 p-4 text-sm font-medium text-slate-700">{socketError}</div>}
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.7fr_0.9fr]">
-            <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+            <div className={`overflow-hidden border border-slate-200 bg-white shadow-sm ${useMobileShell ? "rounded-[16px]" : "rounded-[28px]"}`}>
               <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h4 className="font-bold text-slate-900">Live Route View</h4>
@@ -434,7 +441,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
               </div>
 
               {mapPoints.length ? (
-                <div className="tracker-map h-[360px] w-full sm:h-[470px]">
+                <div className={`tracker-map w-full ${useMobileShell ? "h-[280px]" : "h-[360px] sm:h-[470px]"}`}>
                   <MapContainer
                     center={mapPoints[0].position}
                     zoom={13}
@@ -482,7 +489,7 @@ const LivePickupTracker: React.FC<LivePickupTrackerProps> = ({ role, requestId, 
                   </MapContainer>
                 </div>
               ) : (
-                <div className="flex h-[360px] items-center justify-center px-6 text-center text-sm text-slate-500 sm:h-[470px]">
+                <div className={`flex items-center justify-center px-6 text-center text-sm text-slate-500 ${useMobileShell ? "h-[280px]" : "h-[360px] sm:h-[470px]"}`}>
                   Waiting for location coordinates to render the live map.
                 </div>
               )}

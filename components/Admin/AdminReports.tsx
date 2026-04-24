@@ -227,27 +227,27 @@ const AdminReports: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-20 animate-in fade-in duration-500 sm:space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mobile-page space-y-6 pb-20 animate-in fade-in duration-500 sm:space-y-8">
+      <div className="mobile-section-head flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Impact & Evidence</h2>
           <p className="text-sm text-slate-500">
             Clear donation trends, grouped by time range, so the admin team can spot what needs action
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={exportCSV}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+          <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={exportCSV}>
             CSV Export
           </Button>
-          <Button size="sm" onClick={exportPDF}>
+          <Button size="sm" className="w-full sm:w-auto" onClick={exportPDF}>
             Download PDF Report
           </Button>
         </div>
       </div>
 
-      <Card className="flex flex-wrap gap-3 border-slate-200 bg-slate-50 p-4">
+      <Card className="mobile-toolbar flex flex-wrap gap-3 border-slate-200 bg-slate-50 p-4">
         <select
-          className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
+          className="mobile-select min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
           value={range}
           onChange={(e) => setRange(e.target.value)}
         >
@@ -257,7 +257,7 @@ const AdminReports: React.FC = () => {
         </select>
 
         <select
-          className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
+          className="mobile-select min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
           value={sector}
           onChange={(e) => setSector(e.target.value)}
         >
@@ -267,7 +267,7 @@ const AdminReports: React.FC = () => {
         </select>
 
         <select
-          className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
+          className="mobile-select min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold outline-none"
           value={foodType}
           onChange={(e) => setFoodType(e.target.value)}
         >

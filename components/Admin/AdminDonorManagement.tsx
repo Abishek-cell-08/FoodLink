@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Input } from "../UI";
 import api from "../../api/client";
+import { isNativeAppShell } from "../../utils/platform";
 
 interface DonorItem {
   id: number;
@@ -41,9 +42,11 @@ const AdminDonorManagement: React.FC = () => {
     fetchDonors();
   }, [search]);
 
+  const useMobileCards = isNativeAppShell();
+
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mobile-page space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="mobile-section-head">
         <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Donor Directory</h2>
         <p className="text-sm text-slate-500">
           View all donor accounts and their contribution footprint
@@ -67,44 +70,79 @@ const AdminDonorManagement: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="overflow-hidden border-slate-200">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
-              <tr>
-                <th className="px-6 py-4 font-bold text-slate-700">Donor Name</th>
-                <th className="px-6 py-4 font-bold text-slate-700">Email</th>
-                <th className="px-6 py-4 font-bold text-slate-700">Location</th>
-                <th className="px-6 py-4 font-bold text-slate-700">Total Donations</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center font-medium text-slate-400">
-                    Loading donors...
-                  </td>
-                </tr>
-              ) : donors.length > 0 ? (
-                donors.map((donor) => (
-                  <tr key={donor.id} className="transition-colors hover:bg-slate-50/60">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{donor.name}</td>
-                    <td className="px-6 py-4 text-slate-600">{donor.email}</td>
-                    <td className="px-6 py-4 text-slate-500">{donor.location}</td>
-                    <td className="px-6 py-4 font-bold text-slate-900">{donor.totalDonations}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center font-medium text-slate-400">
-                    No donors found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {useMobileCards ? (
+        <div className="mobile-list">
+          {loading ? (
+            <Card className="p-5 text-center text-slate-400">Loading donors...</Card>
+          ) : donors.length > 0 ? (
+            donors.map((donor) => (
+              <Card key={donor.id} className="mobile-data-card border-slate-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-base font-bold text-slate-900">{donor.name}</div>
+                    <div className="mt-1 line-clamp-1 text-sm text-slate-500">{donor.email}</div>
+                  </div>
+                  <span className="mobile-status-badge bg-emerald-50 text-emerald-700">
+                    {donor.totalDonations} posted
+                  </span>
+                </div>
+
+                <div className="mobile-data-meta">
+                  <div>
+                    <div className="mobile-data-label">Location</div>
+                    <div className="mobile-data-value">{donor.location || "Not set"}</div>
+                  </div>
+                  <div>
+                    <div className="mobile-data-label">Impact</div>
+                    <div className="mobile-data-value">{donor.totalDonations} donations</div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <Card className="p-5 text-center text-slate-400">No donors found.</Card>
+          )}
         </div>
-      </Card>
+      ) : (
+        <Card className="overflow-hidden border-slate-200">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50">
+                <tr>
+                  <th className="px-6 py-4 font-bold text-slate-700">Donor Name</th>
+                  <th className="px-6 py-4 font-bold text-slate-700">Email</th>
+                  <th className="px-6 py-4 font-bold text-slate-700">Location</th>
+                  <th className="px-6 py-4 font-bold text-slate-700">Total Donations</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center font-medium text-slate-400">
+                      Loading donors...
+                    </td>
+                  </tr>
+                ) : donors.length > 0 ? (
+                  donors.map((donor) => (
+                    <tr key={donor.id} className="transition-colors hover:bg-slate-50/60">
+                      <td className="px-6 py-4 font-semibold text-slate-900">{donor.name}</td>
+                      <td className="px-6 py-4 text-slate-600">{donor.email}</td>
+                      <td className="px-6 py-4 text-slate-500">{donor.location}</td>
+                      <td className="px-6 py-4 font-bold text-slate-900">{donor.totalDonations}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center font-medium text-slate-400">
+                      No donors found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

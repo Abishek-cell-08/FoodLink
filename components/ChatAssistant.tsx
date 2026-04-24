@@ -254,7 +254,7 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
         <div
           className={`flex flex-col overflow-hidden border border-slate-200 bg-[linear-gradient(180deg,#f8fffb_0%,#eef6ff_100%)] ${
             isEmbedded
-              ? "min-h-[calc(100vh-10rem)] rounded-[30px] shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
+              ? "min-h-[calc(100svh-12rem)] rounded-[28px] shadow-[0_24px_80px_rgba(15,23,42,0.12)]"
               : "fixed bottom-3 right-3 z-40 h-[min(78vh,42rem)] w-[min(calc(100vw-1.5rem),24rem)] rounded-[28px] shadow-[0_24px_80px_rgba(15,23,42,0.22)] sm:bottom-5 sm:right-5"
           }`}
         >
@@ -276,7 +276,7 @@ const ChatAssistant: React.FC<{ user: User; mode?: "floating" | "embedded" }> = 
             </div>
           </div>
 
-          <div ref={viewportRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <div ref={viewportRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
             {messages.map((message) => (
               <div
                 key={message.id}

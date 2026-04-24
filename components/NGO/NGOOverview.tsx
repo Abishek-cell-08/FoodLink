@@ -79,8 +79,8 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
   const signalPreview = topRecommendation?.decisionSignals?.slice(0, 3) ?? [];
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mobile-page space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+      <div className="mobile-section-head">
         <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
           NGO Strategic Overview
         </h2>
@@ -97,17 +97,19 @@ const NGOOverview: React.FC<NGOOverviewProps> = ({ onBrowse }) => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mobile-section-head flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 sm:text-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               AI-Recommended Picks
             </h3>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onBrowse}
-              className="text-xs font-bold text-emerald-600 hover:underline"
+              className="w-full sm:w-auto"
             >
               Browse All Food
-            </button>
+            </Button>
           </div>
 
           {loading ? (

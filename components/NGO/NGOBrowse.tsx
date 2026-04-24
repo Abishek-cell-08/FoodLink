@@ -109,15 +109,15 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+    <div className="mobile-page space-y-6 animate-in fade-in duration-500">
+      <div className="mobile-section-head flex flex-col gap-4 md:flex-row md:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Food Marketplace</h2>
           <p className="text-sm text-slate-500">
             Discover and claim surplus food ranked by strategic pickup value
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="mobile-toolbar flex flex-col gap-2 sm:flex-row">
           <Input
             placeholder="Search food type..."
             className="w-full md:w-64"
@@ -128,7 +128,7 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
             }}
           />
           <select
-            className="min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none"
+            className="mobile-select min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none"
             value={sort}
             onChange={(e) => {
               setPage(1);
@@ -158,21 +158,22 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
                 key={donation.id}
                 className="group relative flex h-full flex-col border-slate-200 p-4 transition-all hover:border-emerald-300 hover:shadow-lg sm:p-5"
               >
-                <div className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-black shadow-sm group-hover:border-emerald-500">
-                  {donation.priorityScore ?? "-"}
-                </div>
-
-                <div className="mb-4 flex items-start justify-between gap-3 pr-9">
-                  <span
-                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      totalMinutes <= 120 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {totalMinutes <= 120 ? "Critical" : "Available"}
-                  </span>
-                  <span className="break-words text-xs font-medium text-slate-400">
-                    {donation.distanceKm != null ? `${donation.distanceKm.toFixed(1)} km away` : "Unknown distance"}
-                  </span>
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                    <span
+                      className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        totalMinutes <= 120 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {totalMinutes <= 120 ? "Critical" : "Available"}
+                    </span>
+                    <span className="min-w-0 break-words text-right text-xs font-medium text-slate-400">
+                      {donation.distanceKm != null ? `${donation.distanceKm.toFixed(1)} km away` : "Unknown distance"}
+                    </span>
+                  </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-black shadow-sm transition-colors group-hover:border-emerald-500">
+                    {donation.priorityScore ?? "-"}
+                  </div>
                 </div>
 
                 {donation.priorityTier && (
@@ -226,7 +227,7 @@ const NGOBrowse: React.FC<NGOBrowseProps> = ({ user, onClaim }) => {
           </div>
 
           {items.length > 0 && (
-            <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mobile-pagination flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs font-medium text-slate-500">
                 Showing {items.length} of {total} entries
               </div>

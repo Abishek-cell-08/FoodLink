@@ -108,17 +108,17 @@ const AdminPriorityIntelligence: React.FC = () => {
   const visibleItems = topItems.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className="space-y-6 pb-20 animate-in fade-in duration-500 sm:space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mobile-page space-y-6 pb-20 animate-in fade-in duration-500 sm:space-y-8">
+      <div className="mobile-section-head flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Priority Intelligence</h2>
           <p className="text-sm text-slate-500">
             Audit the ranking engine across heuristic logic, ML prediction, and final recommendation order
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="mobile-toolbar flex flex-wrap gap-2">
           <select
-            className="min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium outline-none"
+            className="mobile-select min-h-10 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium outline-none"
             value={selectedNgoId}
             onChange={(e) => {
               const value = e.target.value ? Number(e.target.value) : "";
@@ -133,7 +133,7 @@ const AdminPriorityIntelligence: React.FC = () => {
               </option>
             ))}
           </select>
-          <Button size="sm" variant="outline" onClick={() => fetchInsights(selectedNgoId)}>
+          <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => fetchInsights(selectedNgoId)}>
             Refresh
           </Button>
         </div>
@@ -141,7 +141,7 @@ const AdminPriorityIntelligence: React.FC = () => {
 
       {error && <div className="rounded-lg bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mobile-stat-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="relative p-5 border-slate-200">
           <InfoPopover
             className="absolute right-4 top-4"
@@ -295,7 +295,7 @@ const AdminPriorityIntelligence: React.FC = () => {
               ))}
 
               {topItems.length > perPage && (
-                <div className="flex flex-col gap-3 px-1 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mobile-pagination flex flex-col gap-3 px-1 pt-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-xs font-medium text-slate-500">
                     Showing {visibleItems.length} of {topItems.length} ranked items
                   </div>

@@ -57,7 +57,7 @@ const NGOScanQR: React.FC<NGOScanQRProps> = ({ onSuccess, onCancel }) => {
   }, []);
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
+    <div className="mobile-page mx-auto max-w-md space-y-6">
       <Card className="p-5 sm:p-6">
         <h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">Scan Pickup QR</h2>
 

@@ -46,8 +46,10 @@ const DonorDonationQR: React.FC<Props> = ({ donationId, onClose }) => {
   }
 
   return (
-    <Card className="w-full max-w-lg space-y-6 p-6 text-center sm:p-7">
-      <div>
+    <Card className="w-full max-w-lg max-h-[calc(100vh-1.5rem)] overflow-y-auto text-center sm:max-h-[calc(100vh-4rem)]">
+      <div className="space-y-6 p-5 sm:p-7">
+      <div className="flex items-start justify-between gap-4 text-left">
+        <div className="min-w-0 flex-1 text-center sm:text-left">
         <div className="premium-kicker">Pickup verification</div>
         <h3 className="mt-4 text-2xl font-black tracking-[-0.04em] text-slate-950">
           Pickup QR Code
@@ -55,6 +57,15 @@ const DonorDonationQR: React.FC<Props> = ({ donationId, onClose }) => {
         <p className="mt-3 text-sm leading-7 text-slate-500">
           Show this QR to the NGO at pickup time. If scanning is unavailable, they can verify the pickup using the manual request code below.
         </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close QR view"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold leading-none text-slate-500 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45)] transition-all hover:border-slate-300 hover:text-slate-900"
+        >
+          X
+        </button>
       </div>
 
       {qr && (
@@ -88,10 +99,13 @@ const DonorDonationQR: React.FC<Props> = ({ donationId, onClose }) => {
           The NGO can enter this code in the manual verification field if the camera scanner does not work.
         </p>
       </div>
+      </div>
 
-      <Button variant="outline" onClick={onClose}>
-        Close
-      </Button>
+      <div className="sticky bottom-0 border-t border-slate-200/80 bg-white/95 p-4 backdrop-blur">
+        <Button variant="outline" onClick={onClose} fullWidth>
+          Close
+        </Button>
+      </div>
     </Card>
   );
 };

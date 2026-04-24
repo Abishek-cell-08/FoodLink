@@ -17,7 +17,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-full border font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.99]';
+  const baseStyles = 'ui-button inline-flex touch-manipulation items-center justify-center gap-2 rounded-full border font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.99]';
   
   const variants = {
     primary: 'border-emerald-500 bg-emerald-500 text-white shadow-[0_16px_36px_-18px_rgba(16,185,129,0.9)] hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-[0_22px_48px_-20px_rgba(16,185,129,0.82)] focus:ring-emerald-500/40',
@@ -36,6 +36,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button 
+      data-size={size}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${width} ${className}`}
       {...props}
     >
@@ -60,7 +61,7 @@ export const StatusBadge: React.FC<{ status: DonationStatus }> = ({ status }) =>
 };
 
 export const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
-  <div className={`glass-surface overflow-hidden rounded-[28px] border border-white/70 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.22)] ${className}`}>
+  <div className={`ui-card glass-surface overflow-hidden rounded-[24px] border border-white/70 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.22)] sm:rounded-[28px] ${className}`}>
     {children}
   </div>
 );
@@ -196,7 +197,7 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { lab
   <div className="flex w-full flex-col gap-2">
     {label && <label className="text-sm font-semibold text-slate-700">{label}</label>}
     <input 
-      className={`min-h-12 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-emerald-200 focus:bg-white focus:ring-4 focus:ring-emerald-500/12 sm:px-4 ${className}`}
+      className={`ui-input min-h-12 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-emerald-200 focus:bg-white focus:ring-4 focus:ring-emerald-500/12 sm:px-4 ${className}`}
       {...props}
     />
   </div>

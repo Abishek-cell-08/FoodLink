@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">WasteFoodLink</string>
-    <string name="title_activity_main">WasteFoodLink</string>
+    <string name="app_name">FeedForward</string>
+    <string name="title_activity_main">FeedForward</string>
     <string name="package_name">com.wastefoodlink.app</string>
     <string name="custom_url_scheme">com.wastefoodlink.app</string>
 </resources>

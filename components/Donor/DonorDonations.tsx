@@ -108,18 +108,18 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
   const modalRoot = typeof document !== "undefined" ? document.body : null;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="mobile-page space-y-6 animate-in fade-in duration-500">
+      <div className="mobile-section-head flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">My Donations</h2>
           <p className="text-slate-500 text-sm">
             Manage and track your active surplus listings
           </p>
         </div>
-        <Button size="sm" onClick={onAddClick}>New Donation</Button>
+        <Button size="sm" className="w-full sm:w-auto" onClick={onAddClick}>New Donation</Button>
       </div>
 
-      <Card className="flex flex-col gap-4 border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center">
+      <Card className="mobile-toolbar flex flex-col gap-4 border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center">
         <div className="w-full md:w-72">
           <Input
             placeholder="Search food type..."
@@ -131,7 +131,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
             className="bg-white"
           />
         </div>
-        <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+        <div className="mobile-chip-row flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
           {(["ALL", ...Object.values(DonationStatus)] as const).map((status) => (
             <button
               key={status}
@@ -171,7 +171,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
               </button>
             ))}
           </div>
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="mobile-chip-row flex gap-2 overflow-x-auto">
             {([
               { value: "7D", label: "7D" },
               { value: "30D", label: "30D" },
@@ -414,7 +414,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
         </Card>
       )}
 
-      <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mobile-pagination flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-xs text-slate-500 font-medium">
           Showing {items.length} of {total} entries
         </div>
@@ -449,7 +449,7 @@ const DonorDonations: React.FC<DonorDonationsProps> = ({ onAddClick }) => {
       )}
 
       {showQrId && modalRoot && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-md">
+        <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-slate-950/50 p-3 pt-4 backdrop-blur-md sm:items-center sm:p-4">
           <DonorDonationQR
             donationId={showQrId}
             onClose={() => setShowQrId(null)}

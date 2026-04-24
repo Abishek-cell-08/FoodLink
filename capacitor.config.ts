@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.wastefoodlink.app",
-  appName: "WasteFoodLink",
+  appName: "FeedForward",
   webDir: "dist",
   server: {
     androidScheme: "http",

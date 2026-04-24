@@ -31,7 +31,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
 const OverviewIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -42,7 +42,7 @@ const OverviewIcon = ({ active }: { active: boolean }) => (
 
 const DonationsIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -53,7 +53,7 @@ const DonationsIcon = ({ active }: { active: boolean }) => (
 
 const AddDonationIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-white' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -64,7 +64,7 @@ const AddDonationIcon = ({ active }: { active: boolean }) => (
 
 const AiIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -75,7 +75,7 @@ const AiIcon = ({ active }: { active: boolean }) => (
 
 const BrowseIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -86,7 +86,7 @@ const BrowseIcon = ({ active }: { active: boolean }) => (
 
 const RequestsIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -97,7 +97,7 @@ const RequestsIcon = ({ active }: { active: boolean }) => (
 
 const ScanIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-white' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -108,7 +108,7 @@ const ScanIcon = ({ active }: { active: boolean }) => (
 
 const NgoManageIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -119,7 +119,7 @@ const NgoManageIcon = ({ active }: { active: boolean }) => (
 
 const DonorManageIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -130,7 +130,7 @@ const DonorManageIcon = ({ active }: { active: boolean }) => (
 
 const ReportsIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-emerald-600' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -141,7 +141,7 @@ const ReportsIcon = ({ active }: { active: boolean }) => (
 
 const AuditIcon = ({ active }: { active: boolean }) => (
   <svg
-    className={`h-5 w-5 ${active ? 'text-white' : 'text-slate-400'}`}
+    className={`h-5 w-5 ${active ? 'text-emerald-400' : 'text-slate-400'}`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -247,9 +247,10 @@ const MobileTabBar: React.FC<{
         : donorItems;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pb-4 pt-2.5 shadow-[0_-18px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-4">
-      <div className="mx-auto max-w-md overflow-x-auto pb-1">
-        <div className="flex min-w-max items-center gap-1.5 rounded-[24px] bg-slate-950 px-1.5 py-1.5">
+    <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-2 sm:px-4">
+      <div className="mx-auto max-w-[430px] rounded-[20px] border border-slate-800/90 bg-black/95 p-2 shadow-[0_-16px_36px_rgba(15,23,42,0.38)] backdrop-blur-2xl">
+        <div className="overflow-x-auto pb-1">
+          <div className="flex min-w-max items-center gap-1.5 rounded-[16px] bg-black px-1.5 py-1.5">
         {items.map((item) => {
           const active = activePage === item.key;
           const isPrimary = item.key === 'add-donation' || item.key === 'scan-qr';
@@ -259,14 +260,14 @@ const MobileTabBar: React.FC<{
               key={item.key}
               type="button"
               onClick={() => onNavigate(item.key)}
-              className={`flex min-h-[60px] min-w-[64px] flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[10px] font-semibold transition-all ${
+              className={`flex min-h-[54px] min-w-[60px] flex-col items-center justify-center gap-1 rounded-[12px] px-2.5 py-2 text-[10px] font-semibold transition-all ${
                 isPrimary
                   ? active
-                    ? 'bg-emerald-500 text-white shadow-[0_12px_24px_rgba(16,185,129,0.35)]'
-                    : 'bg-white/8 text-slate-300'
+                    ? 'bg-white/8 text-emerald-400 shadow-[0_12px_24px_rgba(16,185,129,0.12)]'
+                    : 'bg-white/8 text-slate-300 hover:bg-white/12'
                   : active
-                    ? 'bg-white text-emerald-700'
-                    : 'text-slate-400'
+                    ? 'bg-white/8 text-emerald-400 shadow-[0_10px_24px_rgba(16,185,129,0.12)]'
+                    : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               {item.icon}
@@ -274,6 +275,7 @@ const MobileTabBar: React.FC<{
             </button>
           );
         })}
+          </div>
         </div>
       </div>
     </div>
@@ -302,33 +304,45 @@ const DashboardLayout: React.FC<{
 
   if (useNativeMobileShell) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#eef7f2_100%)]">
-        <header className="sticky top-0 z-30 border-b border-white/70 bg-white/85 px-4 pb-3.5 pt-4 backdrop-blur-xl sm:px-5 sm:pb-4 sm:pt-5">
-          <div className="mx-auto flex max-w-md items-center justify-between">
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-600 sm:text-[11px]">
+      <div className="native-mobile-shell">
+        <header className="sticky top-0 z-30 border-b border-white/70 bg-white/78 px-4 pb-4 pt-[calc(0.9rem+env(safe-area-inset-top))] backdrop-blur-2xl sm:px-5">
+          <div className="mx-auto flex max-w-[430px] items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700">
                 {user.role === UserRole.NGO
                   ? 'NGO App'
                   : user.role === UserRole.ADMIN
                     ? 'Admin App'
                     : 'Donor App'}
               </div>
-              <div className="mt-1 text-lg font-black text-slate-950 sm:text-xl">
-                Welcome, {user.name.split(' ')[0]}
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[linear-gradient(135deg,#0f172a,#14926f)] text-sm font-black text-white shadow-[0_16px_30px_-22px_rgba(15,23,42,0.7)]">
+                  {user.name.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium text-slate-500">
+                    Welcome back
+                  </div>
+                  <div className="truncate text-[1.15rem] font-black tracking-[-0.04em] text-slate-950">
+                    {user.name.split(' ')[0]}
+                  </div>
+                </div>
               </div>
             </div>
             <button
               type="button"
               onClick={onLogout}
-              className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 shadow-sm"
+              className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.55)]"
             >
               Logout
             </button>
           </div>
         </header>
 
-        <main className="mx-auto flex min-h-[calc(100vh-5.5rem)] max-w-md flex-col px-3.5 pb-24 pt-3.5 sm:px-4 sm:pb-28 sm:pt-4">
-          {children}
+        <main className="native-mobile-content mx-auto flex min-h-[calc(100vh-5.5rem)] w-full max-w-[430px] flex-col">
+          <div className="native-mobile-page page-fade">
+            {children}
+          </div>
         </main>
 
         <MobileTabBar
